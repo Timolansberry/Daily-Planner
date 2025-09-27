@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Daily Planner - Organize your day with tasks, schedule, meals, and notes">
+    <title>Daily Planner</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1 class="title">DAILY PLAN</h1>
+            <div class="date-controls">
+                <label for="date-picker" class="sr-only">Select date</label>
+                <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
+                <div class="weekday-toggles" role="group" aria-label="Weekday selection">
+                    <button type="button" class="weekday-btn" data-day="1" aria-label="Monday">M</button>
+                    <button type="button" class="weekday-btn" data-day="2" aria-label="Tuesday">T</button>
+                    <button type="button" class="weekday-btn" data-day="3" aria-label="Wednesday">W</button>
+                    <button type="button" class="weekday-btn" data-day="4" aria-label="Thursday">T</button>
+                    <button type="button" class="weekday-btn" data-day="5" aria-label="Friday">F</button>
+                    <button type="button" class="weekday-btn" data-day="6" aria-label="Saturday">S</button>
+                    <button type="button" class="weekday-btn" data-day="0" aria-label="Sunday">S</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Left Column: Tasks and Notes -->
+            <div class="left-column">
+                <!-- Top 3 Section -->
+                <section class="section top-three-section" aria-labelledby="top-three-heading">
+                    <h2 id="top-three-heading" class="section-title">TOP 3</h2>
+                    <ul class="top-three-list" role="list" aria-label="Top 3 priorities">
+                        <!-- Top 3 items will be dynamically generated -->
+                    </ul>
+                    <div class="validation-message" id="top-three-validation" role="alert" aria-live="polite"></div>
+                </section>
+
+                <!-- To-Do Section -->
+                <section class="section todo-section" aria-labelledby="todo-heading">
+                    <h2 id="todo-heading" class="section-title">TO-DO</h2>
+                    <div class="todo-input-container">
+                        <label for="todo-input" class="sr-only">Add new todo item</label>
+                        <input type="text" id="todo-input" class="todo-input" placeholder="Add new task..." aria-label="Add new todo item">
+                        <button type="button" id="add-todo-btn" class="add-btn" aria-label="Add todo item">+</button>
+                    </div>
+                    <ul class="todo-list" role="list" aria-label="Todo items">
+                        <!-- Todo items will be dynamically generated -->
+                    </ul>
+                    <div class="empty-state" id="todo-empty-state">
+                        <p>No tasks yet. Add one above!</p>
+                    </div>
+                </section>
+
+                <!-- Notes Section -->
+                <section class="section notes-section" aria-labelledby="notes-heading">
+                    <h2 id="notes-heading" class="section-title">NOTES</h2>
+                    <label for="notes-textarea" class="sr-only">Daily notes</label>
+                    <textarea id="notes-textarea" class="notes-textarea" placeholder="Your thoughts, ideas, and reminders..." aria-label="Daily notes"></textarea>
+                </section>
+            </div>
+
+            <!-- Right Column: Schedule, Meals, and Water -->
+            <div class="right-column">
+                <!-- Schedule Section -->
+                <section class="section schedule-section" aria-labelledby="schedule-heading">
+                    <h2 id="schedule-heading" class="section-title">SCHEDULE</h2>
+                    <div class="schedule-container">
+                        <!-- Schedule items will be dynamically generated -->
+                    </div>
+                </section>
+
+                <!-- Meals and Water Section -->
+                <section class="section meals-water-section" aria-labelledby="meals-water-heading">
+                    <div class="meals-container">
+                        <h3 id="meals-water-heading" class="meals-title">MEALS</h3>
+                        <div class="meals-grid">
+                            <div class="meal-item">
+                                <label for="breakfast-input" class="meal-label">BREAKFAST</label>
+                                <input type="text" id="breakfast-input" class="meal-input" placeholder="What's for breakfast?" aria-label="Breakfast">
+                            </div>
+                            <div class="meal-item">
+                                <label for="lunch-input" class="meal-label">LUNCH</label>
+                                <input type="text" id="lunch-input" class="meal-input" placeholder="What's for lunch?" aria-label="Lunch">
+                            </div>
+                            <div class="meal-item">
+                                <label for="dinner-input" class="meal-label">DINNER</label>
+                                <input type="text" id="dinner-input" class="meal-input" placeholder="What's for dinner?" aria-label="Dinner">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="water-container">
+                        <h3 class="water-title">WATER INTAKE</h3>
+                        <div class="water-dots" role="group" aria-label="Water intake tracking">
+                            <!-- Water dots will be dynamically generated -->
+                        </div>
+                        <div class="water-count" id="water-count" aria-live="polite">0/8</div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Screen reader only text -->
+    <div class="sr-only" aria-live="polite" id="status-announcements"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
