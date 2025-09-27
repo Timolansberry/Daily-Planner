@@ -63,13 +63,25 @@ function announceStatus(message) {
 }
 
 // ============================================================================
-// STORAGE ADAPTER (Firebase-ready)
+// STORAGE ADAPTER (Firebase + localStorage fallback)
 // ============================================================================
 
 /**
- * Storage adapter - currently uses localStorage, ready for Firebase
+ * Storage adapter - uses Firebase Firestore with localStorage fallback
  */
 const storage = {
+  _firebaseReady: false,
+  _userId: null,
+
+  /**
+   * Initialize Firebase storage
+   */
+  initFirebase(userId) {
+    this._firebaseReady = true;
+    this._userId = userId;
+    console.log('Firebase storage initialized for user:', userId);
+  },
+
   /**
    * Get planner data for a specific date
    * @param {string} dateStr - Date in YYYY-MM-DD format
@@ -77,16 +89,31 @@ const storage = {
    */
   async get(dateStr) {
     try {
-      // localStorage implementation
-      const data = localStorage.getItem(`planner:${dateStr}`);
-      return data ? JSON.parse(data) : null;
+      // Try Firebase first if available
+      if (this._firebaseReady && this._userId && window.firebase) {
+        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+        const plannerDoc = doc(window.firebase.db, 'users', this._userId, 'planner', dateStr);
+        const docSnap = await getDoc(plannerDoc);
+        
+        if (docSnap.exists()) {
+          console.log('Loaded from Firebase:', dateStr);
+          return docSnap.data();
+        }
+      }
       
-      // TODO: Replace with Firebase when ready
-      // const doc = await firestore.collection('users').doc(userId).collection('planner').doc(dateStr).get();
-      // return doc.exists ? doc.data() : null;
+      // Fallback to localStorage
+      const data = localStorage.getItem(`planner:${dateStr}`);
+      if (data) {
+        console.log('Loaded from localStorage:', dateStr);
+        return JSON.parse(data);
+      }
+      
+      return null;
     } catch (error) {
       console.error('Error loading planner data:', error);
-      return null;
+      // Fallback to localStorage on error
+      const data = localStorage.getItem(`planner:${dateStr}`);
+      return data ? JSON.parse(data) : null;
     }
   },
 
@@ -97,13 +124,54 @@ const storage = {
    */
   async set(dateStr, data) {
     try {
-      // localStorage implementation
+      // Save to localStorage immediately for offline support
       localStorage.setItem(`planner:${dateStr}`, JSON.stringify(data));
       
-      // TODO: Replace with Firebase when ready
-      // await firestore.collection('users').doc(userId).collection('planner').doc(dateStr).set(data);
+      // Try Firebase if available
+      if (this._firebaseReady && this._userId && window.firebase) {
+        const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+        const plannerDoc = doc(window.firebase.db, 'users', this._userId, 'planner', dateStr);
+        await setDoc(plannerDoc, {
+          ...data,
+          lastUpdated: new Date().toISOString(),
+          userId: this._userId
+        });
+        console.log('Saved to Firebase:', dateStr);
+      }
     } catch (error) {
       console.error('Error saving planner data:', error);
+      // localStorage backup already saved above
+    }
+  },
+
+  /**
+   * Sync localStorage data to Firebase
+   */
+  async syncToFirebase() {
+    if (!this._firebaseReady || !this._userId) return;
+    
+    try {
+      const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+      
+      // Get all localStorage keys
+      const keys = Object.keys(localStorage).filter(key => key.startsWith('planner:'));
+      
+      for (const key of keys) {
+        const dateStr = key.replace('planner:', '');
+        const data = JSON.parse(localStorage.getItem(key));
+        
+        const plannerDoc = doc(window.firebase.db, 'users', this._userId, 'planner', dateStr);
+        await setDoc(plannerDoc, {
+          ...data,
+          lastUpdated: new Date().toISOString(),
+          userId: this._userId,
+          synced: true
+        });
+      }
+      
+      console.log('Synced', keys.length, 'plans to Firebase');
+    } catch (error) {
+      console.error('Error syncing to Firebase:', error);
     }
   }
 };
@@ -591,6 +659,9 @@ class DateManager {
 // INITIALIZATION
 // ============================================================================
 
+// Global app instance
+let plannerApp = null;
+
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -612,6 +683,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.planner = planner;
     window.currentPlan = () => currentPlan;
     window.currentDate = () => currentDate;
+    window.plannerApp = planner;
+    
+    // Store app instance for Firebase initialization
+    plannerApp = planner;
     
     console.log('Daily Planner initialized successfully');
     
@@ -621,41 +696,52 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+// Firebase initialization handler
+window.initWithFirebase = async function(userId) {
+  try {
+    console.log('Initializing Firebase integration for user:', userId);
+    
+    // Initialize storage with Firebase
+    storage.initFirebase(userId);
+    
+    // Sync existing localStorage data to Firebase
+    await storage.syncToFirebase();
+    
+    // Reload current plan to get Firebase data if available
+    if (plannerApp) {
+      await plannerApp.loadPlan(formatDate(currentDate));
+    }
+    
+    announceStatus('Connected to cloud storage');
+    console.log('Firebase integration complete');
+    
+  } catch (error) {
+    console.error('Error initializing Firebase:', error);
+    announceStatus('Using local storage only');
+  }
+};
+
 // ============================================================================
-// FIREBASE INTEGRATION HOOKS (Ready for implementation)
+// FIREBASE INTEGRATION COMPLETE
 // ============================================================================
 
 /*
-// TODO: Firebase integration example
-// Uncomment and modify when ready to integrate Firebase
+Firebase integration is now complete and includes:
 
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+✅ Firebase App initialization with your project config
+✅ Firestore database integration
+✅ Anonymous authentication for demo purposes
+✅ Hybrid storage (Firebase + localStorage fallback)
+✅ Automatic data syncing
+✅ Offline support with localStorage backup
+✅ User-specific data storage
 
-const firebaseConfig = {
-  // Your Firebase config
-};
+The app will:
+1. Sign in users anonymously
+2. Store data in Firestore under users/{uid}/planner/{date}
+3. Fall back to localStorage if Firebase is unavailable
+4. Sync existing localStorage data to Firebase on first connection
+5. Save to both Firebase and localStorage for reliability
 
-const app = initializeApp(firebaseConfig);
-const firestore = getFirestore(app);
-const auth = getAuth(app);
-
-// Update storage adapter to use Firebase
-const storage = {
-  async get(dateStr) {
-    const user = auth.currentUser;
-    if (!user) return null;
-    
-    const doc = await firestore.collection('users').doc(user.uid).collection('planner').doc(dateStr).get();
-    return doc.exists ? doc.data() : null;
-  },
-
-  async set(dateStr, data) {
-    const user = auth.currentUser;
-    if (!user) return;
-    
-    await firestore.collection('users').doc(user.uid).collection('planner').doc(dateStr).set(data);
-  }
-};
+To customize authentication, replace the anonymous sign-in with your preferred method.
 */

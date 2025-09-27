@@ -111,6 +111,51 @@
     <!-- Screen reader only text -->
     <div class="sr-only" aria-live="polite" id="status-announcements"></div>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXGvAhqZJ1fFdZGYvBQ_GinfQ_p_dkpdE",
+            authDomain: "portfolio-projects-1d337.firebaseapp.com",
+            databaseURL: "https://portfolio-projects-1d337-default-rtdb.firebaseio.com",
+            projectId: "portfolio-projects-1d337",
+            storageBucket: "portfolio-projects-1d337.firebasestorage.app",
+            messagingSenderId: "848327381159",
+            appId: "1:848327381159:web:55e560f81ecc6e6cd38b82",
+            measurementId: "G-6DBH9RN8TT"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Make Firebase available globally
+        window.firebase = { app, db, auth };
+        
+        // Sign in anonymously for demo purposes
+        // In production, you might want to implement proper authentication
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log('User signed in:', user.uid);
+                // Initialize the app once user is authenticated
+                if (window.plannerApp) {
+                    window.plannerApp.initWithFirebase();
+                }
+            } else {
+                console.log('Signing in anonymously...');
+                signInAnonymously(auth).catch((error) => {
+                    console.error('Error signing in:', error);
+                });
+            }
+        });
+    </script>
+    
     <script src="script.js"></script>
 </body>
 </html>
