@@ -1,0 +1,22 @@
+# Firebase Configuration (contains sensitive API keys)
+firebase-config.js
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Node modules (if using npm)
+node_modules/
+
+# Build files
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

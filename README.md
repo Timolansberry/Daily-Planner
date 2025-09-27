@@ -19,15 +19,27 @@ A responsive daily planner web app with a dark blue + electric blue theme, built
 
 ## Firebase Integration
 
-The app is now fully integrated with Firebase and includes:
+The app supports Firebase integration with secure configuration:
 
-✅ **Firebase App initialization** with your project configuration  
+✅ **Secure config management** - API keys not exposed in source code  
 ✅ **Firestore database integration** for cloud storage  
 ✅ **Anonymous authentication** for demo purposes  
 ✅ **Hybrid storage** (Firebase + localStorage fallback)  
 ✅ **Automatic data syncing** from localStorage to Firebase  
 ✅ **Offline support** with localStorage backup  
 ✅ **User-specific data storage** in Firestore  
+
+### 🔒 Secure Setup
+
+**For Production:**
+1. Copy `firebase-config.example.js` to `firebase-config.js`
+2. Add your Firebase project configuration to the new file
+3. The `firebase-config.js` file is ignored by git (see `.gitignore`)
+4. Your API keys will be secure and not visible in the repository
+
+**For Development:**
+- The app works with localStorage only if no Firebase config is provided
+- No sensitive data is exposed in the source code  
 
 ### Data Storage Structure
 ```
