@@ -162,6 +162,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  
+  /* Remove default tap highlights on mobile */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  
+  /* Ensure round shape is maintained */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .weekday-btn:hover {
@@ -178,6 +191,18 @@ body {
 .weekday-btn:focus {
   outline: none;
   box-shadow: 0 0 0 3px var(--shadow-light);
+}
+
+/* Mobile-specific tap styles */
+.weekday-btn:active {
+  background: var(--accent);
+  color: var(--bg);
+  transform: scale(0.95);
+}
+
+.weekday-btn.active:active {
+  background: #0099cc;
+  transform: scale(0.95);
 }
 
 /* Main Content Layout */
@@ -228,37 +253,49 @@ body {
   border: 1px solid rgba(0, 179, 255, 0.2);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
+  position: relative;
 }
 
 .top-three-item:hover {
   background: rgba(0, 179, 255, 0.1);
 }
 
+.top-three-item.done {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
 .top-three-checkbox {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
   border: 2px solid var(--accent);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   background: transparent;
   cursor: pointer;
   transition: all var(--transition-fast);
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-three-checkbox:hover {
+  border-color: #0099cc;
+  transform: scale(1.05);
 }
 
 .top-three-checkbox:checked {
-  background: var(--accent);
+  background: var(--success);
+  border-color: var(--success);
 }
 
 .top-three-checkbox:checked::after {
   content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--bg);
-  font-size: 0.75rem;
+  color: white;
+  font-size: 0.875rem;
   font-weight: bold;
+  line-height: 1;
 }
 
 .top-three-input {
@@ -268,12 +305,20 @@ body {
   color: var(--text);
   font-size: var(--font-size-base);
   outline: none;
+  transition: all var(--transition-fast);
 }
 
 .top-three-input:focus {
   background: rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-sm);
   padding: var(--space-1);
+}
+
+/* Strike-through effect for completed items */
+.top-three-item.done .top-three-input {
+  text-decoration: line-through;
+  opacity: 0.7;
+  color: var(--muted);
 }
 
 .validation-message {
@@ -726,6 +771,30 @@ body {
   :root {
     --border: #ffffff;
     --muted: #ffffff;
+  }
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 767px) {
+  .weekday-btn {
+    /* Ensure minimum tap target size on mobile */
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Improve touch targets for other interactive elements */
+  .top-three-checkbox,
+  .todo-checkbox,
+  .water-dot,
+  .add-btn,
+  .todo-delete {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile */
+  .weekday-toggles {
+    gap: var(--space-3);
   }
 }
 

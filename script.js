@@ -274,7 +274,7 @@ class PlannerManager {
       currentPlan.topThree[i] = item;
 
       const li = document.createElement('li');
-      li.className = 'top-three-item';
+      li.className = `top-three-item ${item.done ? 'done' : ''}`;
       li.innerHTML = `
         <input type="checkbox" class="top-three-checkbox" ${item.done ? 'checked' : ''} 
                data-id="${item.id}" aria-label="Complete task">
@@ -298,6 +298,13 @@ class PlannerManager {
         const item = currentPlan.topThree.find(item => item.id === id);
         if (item) {
           item.done = e.target.checked;
+          
+          // Toggle the done class on the list item
+          const listItem = e.target.closest('.top-three-item');
+          if (listItem) {
+            listItem.classList.toggle('done', item.done);
+          }
+          
           this.triggerSave();
           announceStatus(item.done ? 'Task completed' : 'Task uncompleted');
         }
@@ -586,9 +593,7 @@ class PlannerManager {
         // Toggle water intake
         if (e.target.classList.contains('filled')) {
           // Unfill this dot and all after it
-          for (let i = index; i < 8; i++) {
-            currentPlan.water = i;
-          }
+          currentPlan.water = index;
         } else {
           // Fill up to this dot
           currentPlan.water = index + 1;
