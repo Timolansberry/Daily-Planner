@@ -16,8 +16,13 @@
         <header class="header">
             <h1 class="title">DAILY PLAN</h1>
             <div class="date-controls">
-                <label for="date-picker" class="sr-only">Select date</label>
-                <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
+                <div class="date-input-row">
+                    <label for="date-picker" class="sr-only">Select date</label>
+                    <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
+                    <button type="button" id="clear-all-btn-mobile" class="clear-all-btn clear-all-mobile" aria-label="Clear all data for this date">
+                        <span class="clear-icon">🗑️</span>
+                    </button>
+                </div>
                 <div class="weekday-toggles" role="group" aria-label="Weekday selection">
                     <button type="button" class="weekday-btn" data-day="1" aria-label="Monday">M</button>
                     <button type="button" class="weekday-btn" data-day="2" aria-label="Tuesday">T</button>
@@ -27,7 +32,7 @@
                     <button type="button" class="weekday-btn" data-day="6" aria-label="Saturday">S</button>
                     <button type="button" class="weekday-btn" data-day="0" aria-label="Sunday">S</button>
                 </div>
-                <button type="button" id="clear-all-btn" class="clear-all-btn" aria-label="Clear all data for this date">
+                <button type="button" id="clear-all-btn-desktop" class="clear-all-btn clear-all-desktop" aria-label="Clear all data for this date">
                     <span class="clear-icon">🗑️</span>
                     <span class="clear-text">Clear All</span>
                 </button>

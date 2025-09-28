@@ -250,6 +250,40 @@ class PlannerManager {
   }
 
   /**
+   * Clear all data for the current date
+   */
+  clearAllData() {
+    // Show confirmation dialog
+    const confirmed = confirm(
+      'Are you sure you want to clear all data for this date?\n\n' +
+      'This will remove:\n' +
+      '• All Top 3 priorities\n' +
+      '• All To-Do items\n' +
+      '• All Schedule entries\n' +
+      '• All Notes\n' +
+      '• All Meal plans\n' +
+      '• Water intake tracking\n\n' +
+      'This action cannot be undone.'
+    );
+    
+    if (confirmed) {
+      // Reset to empty plan
+      currentPlan = getEmptyPlan();
+      
+      // Re-render all sections
+      this.renderAll();
+      
+      // Save the empty state
+      this.triggerSave();
+      
+      // Announce to screen reader
+      announceStatus('All data cleared for this date');
+      
+      console.log('All data cleared for', formatDate(currentDate));
+    }
+  }
+
+  /**
    * Render all sections
    */
   renderAll() {
@@ -690,6 +724,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     planner.bindMealsEvents();
     planner.bindWaterEvents();
     planner.bindTodoEvents();
+    
+    // Bind clear all buttons (both mobile and desktop)
+    const clearBtnMobile = document.getElementById('clear-all-btn-mobile');
+    const clearBtnDesktop = document.getElementById('clear-all-btn-desktop');
+    
+    if (clearBtnMobile) {
+      clearBtnMobile.addEventListener('click', () => {
+        planner.clearAllData();
+      });
+    }
+    
+    if (clearBtnDesktop) {
+      clearBtnDesktop.addEventListener('click', () => {
+        planner.clearAllData();
+      });
+    }
     
     // Load today's plan
     await planner.loadPlan(formatDate(currentDate));

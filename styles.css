@@ -127,6 +127,14 @@ body {
   gap: var(--space-4);
 }
 
+.date-input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  justify-content: center;
+}
+
 .date-picker {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -255,17 +263,39 @@ body {
   font-weight: 600;
 }
 
-/* Hide text on very small screens */
-@media (max-width: 480px) {
-  .clear-text {
-    display: none;
+/* Clear button visibility by screen size */
+.clear-all-desktop {
+  display: none; /* Hide desktop button by default */
+}
+
+.clear-all-mobile {
+  display: flex; /* Show mobile button by default */
+  padding: var(--space-3);
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  background: #ff4444;
+  border-color: #ff4444;
+}
+
+.clear-all-mobile:hover {
+  background: #ff3333;
+  border-color: #ff3333;
+}
+
+.clear-all-mobile .clear-icon {
+  font-size: 1.1rem;
+  filter: brightness(1.2) contrast(1.1);
+}
+
+/* Show desktop button on larger screens */
+@media (min-width: 768px) {
+  .clear-all-desktop {
+    display: flex; /* Show desktop button */
   }
   
-  .clear-all-btn {
-    padding: var(--space-3);
-    min-width: 44px;
-    min-height: 44px;
-    justify-content: center;
+  .clear-all-mobile {
+    display: none; /* Hide mobile button */
   }
 }
 
@@ -762,6 +792,7 @@ body {
   .date-controls {
     flex-direction: row;
     align-items: center;
+    gap: var(--space-6);
   }
   
   .main-content {
