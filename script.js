@@ -363,8 +363,6 @@ class PlannerManager {
 
       container.appendChild(li);
     });
-
-    this.bindTodoEvents();
   }
 
   bindTodoEvents() {
@@ -372,10 +370,19 @@ class PlannerManager {
     const addBtn = document.getElementById('add-todo-btn');
     const addInput = document.getElementById('todo-input');
 
+    // Check if elements exist
+    if (!addBtn || !addInput) {
+      console.error('Todo elements not found');
+      return;
+    }
+
     // Add new todo
     const addTodo = () => {
       const text = addInput.value.trim();
-      if (!text) return;
+      
+      if (!text) {
+        return;
+      }
 
       const todo = {
         id: generateId(),
@@ -391,9 +398,11 @@ class PlannerManager {
       announceStatus('Task added');
     };
 
+    // Add event listeners (only once)
     addBtn.addEventListener('click', addTodo);
     addInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
+        e.preventDefault();
         addTodo();
       }
     });
@@ -680,6 +689,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     planner.bindNotesEvents();
     planner.bindMealsEvents();
     planner.bindWaterEvents();
+    planner.bindTodoEvents();
     
     // Load today's plan
     await planner.loadPlan(formatDate(currentDate));
