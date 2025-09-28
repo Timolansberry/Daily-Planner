@@ -205,6 +205,70 @@ body {
   transform: scale(0.95);
 }
 
+/* Clear All Button */
+.clear-all-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--error);
+  border: 1px solid var(--error);
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  
+  /* Remove default button styles */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.clear-all-btn:hover {
+  background: #d32f2f;
+  border-color: #d32f2f;
+  transform: translateY(-1px);
+}
+
+.clear-all-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.clear-all-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.3);
+}
+
+.clear-icon {
+  font-size: var(--font-size-base);
+}
+
+.clear-text {
+  font-weight: 600;
+}
+
+/* Hide text on very small screens */
+@media (max-width: 480px) {
+  .clear-text {
+    display: none;
+  }
+  
+  .clear-all-btn {
+    padding: var(--space-3);
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
 /* Main Content Layout */
 .main-content {
   display: grid;
