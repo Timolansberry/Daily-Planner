@@ -741,6 +741,41 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
     
+    // Bind back to top button
+    const backToTopBtn = document.getElementById('back-to-top-btn');
+    if (backToTopBtn) {
+      backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+        announceStatus('Scrolled to top');
+      });
+      
+      // Show/hide button based on scroll position
+      const toggleBackToTopButton = () => {
+        const scrollPosition = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        
+        // Show button when scrolled down more than 300px or near bottom
+        const shouldShow = scrollPosition > 300 || 
+                          (scrollPosition + windowHeight) >= (documentHeight - 100);
+        
+        if (shouldShow) {
+          backToTopBtn.classList.add('visible');
+        } else {
+          backToTopBtn.classList.remove('visible');
+        }
+      };
+      
+      // Check on scroll
+      window.addEventListener('scroll', toggleBackToTopButton);
+      
+      // Check on initial load
+      toggleBackToTopButton();
+    }
+    
     // Load today's plan
     await planner.loadPlan(formatDate(currentDate));
     

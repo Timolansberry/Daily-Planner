@@ -153,7 +153,10 @@ body {
 
 .weekday-toggles {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-1);
+  justify-content: center;
+  flex-wrap: nowrap;
+  max-width: 100%;
 }
 
 .weekday-btn {
@@ -296,6 +299,78 @@ body {
   
   .clear-all-mobile {
     display: none; /* Hide mobile button */
+  }
+}
+
+/* Back to Top Button */
+.back-to-top-btn {
+  position: fixed;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3rem;
+  height: 3rem;
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-full);
+  color: var(--bg);
+  font-size: var(--font-size-lg);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 179, 255, 0.3);
+  opacity: 0;
+  visibility: hidden;
+  
+  /* Remove default button styles */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  
+  /* Hide by default, only show on mobile */
+  display: none;
+}
+
+.back-to-top-btn.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.back-to-top-btn:hover {
+  background: #0099cc;
+  border-color: #0099cc;
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 179, 255, 0.4);
+}
+
+.back-to-top-btn:active {
+  transform: translateX(-50%) translateY(0) scale(0.95);
+}
+
+.back-to-top-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 179, 255, 0.5);
+}
+
+.back-to-top-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Show back to top button only on mobile */
+@media (max-width: 767px) {
+  .back-to-top-btn {
+    display: flex;
   }
 }
 
@@ -909,9 +984,31 @@ body {
     padding: var(--space-4);
   }
   
-  /* Better spacing for mobile */
+  /* Better spacing and sizing for mobile */
   .weekday-toggles {
-    gap: var(--space-3);
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
+  }
+  
+  .weekday-btn {
+    width: 2rem;
+    height: 2rem;
+    font-size: var(--font-size-xs);
+    flex-shrink: 0;
+  }
+}
+
+/* Extra compact for very small screens */
+@media (max-width: 375px) {
+  .weekday-toggles {
+    gap: 0.125rem;
+    padding: 0 var(--space-1);
+  }
+  
+  .weekday-btn {
+    width: 1.875rem;
+    height: 1.875rem;
+    font-size: 0.75rem;
   }
 }
 
