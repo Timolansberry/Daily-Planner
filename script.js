@@ -62,6 +62,16 @@ function announceStatus(message) {
   }
 }
 
+/**
+ * Escape HTML to prevent injection when rendering user text
+ */
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>\"']/g, function (c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
+
 // ============================================================================
 // STORAGE ADAPTER (Firebase + localStorage fallback)
 // ============================================================================
@@ -198,7 +208,9 @@ function getEmptyPlan() {
       lunch: '',
       dinner: ''
     },
-    water: 0
+    water: 0,
+    // Habits: each habit has { id, text, lastCompletedDate }
+    habits: []
   };
 }
 
@@ -293,6 +305,7 @@ class PlannerManager {
     this.renderNotes();
     this.renderMeals();
     this.renderWater();
+    this.renderHabits();
   }
 
   // ========================================================================
@@ -648,6 +661,90 @@ class PlannerManager {
       }
     });
   }
+
+  // ========================================================================
+  // HABITS SECTION
+  // ========================================================================
+
+  renderHabits() {
+    const container = document.querySelector('.habits-list');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const todayStr = formatDate(currentDate);
+
+    currentPlan.habits.forEach(habit => {
+      const doneForToday = habit.lastCompletedDate === todayStr;
+
+      const li = document.createElement('li');
+      li.className = `habit-item ${doneForToday ? 'hidden-for-day' : ''}`;
+      li.dataset.id = habit.id;
+      li.innerHTML = `
+        <button type="button" class="habit-button" aria-label="Toggle habit">${escapeHtml(habit.text)}</button>
+        <button type="button" class="habit-delete" aria-label="Delete habit">×</button>
+      `;
+
+      container.appendChild(li);
+    });
+  }
+
+  bindHabitsEvents() {
+    const addInput = document.getElementById('habit-input');
+    const addBtn = document.getElementById('add-habit-btn');
+    const container = document.querySelector('.habits-list');
+
+    if (addBtn && addInput) {
+      const addHabit = () => {
+        const text = addInput.value.trim();
+        if (!text) return;
+
+        currentPlan.habits.push({ id: generateId(), text, lastCompletedDate: null });
+        addInput.value = '';
+        this.renderHabits();
+        this.triggerSave();
+        announceStatus('Habit added');
+      };
+
+      addBtn.addEventListener('click', addHabit);
+      addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addHabit(); } });
+    }
+
+    if (container) {
+      container.addEventListener('click', (e) => {
+        const habitItem = e.target.closest('.habit-item');
+        if (!habitItem) return;
+
+        const id = habitItem.dataset.id;
+        const habit = currentPlan.habits.find(h => h.id === id);
+        if (!habit) return;
+
+        // Delete
+        if (e.target.classList.contains('habit-delete')) {
+          currentPlan.habits = currentPlan.habits.filter(h => h.id !== id);
+          this.renderHabits();
+          this.triggerSave();
+          announceStatus('Habit deleted');
+          return;
+        }
+
+        // Toggle for today: mark completed (hide for day) or unmark
+        if (e.target.classList.contains('habit-button')) {
+          const todayStr = formatDate(currentDate);
+          if (habit.lastCompletedDate === todayStr) {
+            habit.lastCompletedDate = null;
+            announceStatus('Habit reset for today');
+          } else {
+            habit.lastCompletedDate = todayStr;
+            announceStatus('Habit completed for today');
+          }
+
+          this.renderHabits();
+          this.triggerSave();
+        }
+      });
+    }
+  }
 }
 
 // ============================================================================
@@ -724,6 +821,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     planner.bindMealsEvents();
     planner.bindWaterEvents();
     planner.bindTodoEvents();
+  // Bind habits if the UI exists (habit-builder page)
+  try { planner.bindHabitsEvents(); } catch (e) { /* ignore if not present */ }
     
     // Bind clear all buttons (both mobile and desktop)
     const clearBtnMobile = document.getElementById('clear-all-btn-mobile');

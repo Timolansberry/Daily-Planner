@@ -1,14 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habit Builder</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Habit Builder</title>
+        <link rel="stylesheet" href="styles.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Welcome to the Habit Builder</h1>
-    <p>This is a simple habit-building application.</p>
-    <button onclick="location.href='index.html'">Back to Planner</button>
-    
+    <div class="container">
+        <header class="header">
+            <h1 class="title">HABIT BUILDER</h1>
+            <div class="date-controls">
+                <div class="date-input-row">
+                    <label for="date-picker" class="sr-only">Select date</label>
+                    <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
+                    <button type="button" id="clear-all-btn-mobile" class="clear-all-btn clear-all-mobile" aria-label="Clear all data for this date">
+                        <span class="clear-icon">🗑️</span>
+                    </button>
+                </div>
+                <div class="weekday-toggles" role="group" aria-label="Weekday selection">
+                    <button type="button" class="weekday-btn" data-day="1" aria-label="Monday">M</button>
+                    <button type="button" class="weekday-btn" data-day="2" aria-label="Tuesday">T</button>
+                    <button type="button" class="weekday-btn" data-day="3" aria-label="Wednesday">W</button>
+                    <button type="button" class="weekday-btn" data-day="4" aria-label="Thursday">T</button>
+                    <button type="button" class="weekday-btn" data-day="5" aria-label="Friday">F</button>
+                    <button type="button" class="weekday-btn" data-day="6" aria-label="Saturday">S</button>
+                    <button type="button" class="weekday-btn" data-day="0" aria-label="Sunday">S</button>
+                </div>
+                <button type="button" id="clear-all-btn-desktop" class="clear-all-btn clear-all-desktop" aria-label="Clear all data for this date">
+                    <span class="clear-icon">🗑️</span>
+                    <span class="clear-text">Clear All</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section class="section habits-section">
+                <h2 class="section-title">HABITS</h2>
+
+                <div class="habit-input-container">
+                    <label for="habit-input" class="sr-only">Add a new habit</label>
+                    <input type="text" id="habit-input" class="habit-input" placeholder="New habit (e.g. Meditate)" aria-label="Add habit">
+                    <button type="button" id="add-habit-btn" class="add-btn" aria-label="Add habit">+</button>
+                </div>
+
+                <ul class="habits-list" role="list" aria-label="Habits">
+                    <!-- habits populated by script.js -->
+                </ul>
+
+                <div class="habit-actions">
+                    <button onclick="location.href='index.html'" type="button" class="btn">Back to Planner</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="sr-only" aria-live="polite" id="status-announcements"></div>
+
+    <script type="module">
+        // Habit builder doesn't need Firebase module directly; script.js will handle storage.
+        // Keep this file small and rely on the main script.
+    </script>
+    <script src="script.js"></script>
 </body>
 </html>
