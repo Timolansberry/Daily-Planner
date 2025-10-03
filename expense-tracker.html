@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">EXPENSE TRACKER</h1>
+      <div class="date-controls">
+        <div class="date-input-row">
+          <label for="date-picker" class="sr-only">Select date</label>
+          <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
+        </div>
+        <div class="weekday-toggles" role="group" aria-label="Weekday selection">
+          <button type="button" class="weekday-btn" data-day="1">M</button>
+          <button type="button" class="weekday-btn" data-day="2">T</button>
+          <button type="button" class="weekday-btn" data-day="3">W</button>
+          <button type="button" class="weekday-btn" data-day="4">T</button>
+          <button type="button" class="weekday-btn" data-day="5">F</button>
+          <button type="button" class="weekday-btn" data-day="6">S</button>
+          <button type="button" class="weekday-btn" data-day="0">S</button>
+        </div>
+      </div>
+    </header>
+    <nav class="app-nav" aria-label="App navigation">
+      <a href="index.html">Planner</a>
+      <a href="habit-builder.html">Habits</a>
+      <a href="expense-tracker.html" class="active">Expenses</a>
+      <a href="pomodoro.html">Pomodoro</a>
+      <a href="work.html">Work</a>
+    </nav>
+
+    <main class="main-content">
+      <section class="section">
+        <h2 class="section-title">Add Expense</h2>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <input id="expense-desc" placeholder="Description" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+          <input id="expense-amount" placeholder="Amount" type="number" step="0.01" style="width:120px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+          <input id="expense-cat" placeholder="Category" style="width:140px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+          <button id="add-expense" class="add-btn">+</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Expenses</h2>
+        <ul id="expenses-list" style="list-style:none;display:flex;flex-direction:column;gap:8px;padding:0"></ul>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;justify-content:space-between;">
+          <div id="expenses-total" style="font-weight:600;color:var(--accent)">Total: $0.00</div>
+          <div style="display:flex;gap:8px">
+            <button id="clear-expenses" class="clear-all-btn">Clear All</button>
+            <button onclick="location.href='index.html'" class="add-btn">Back</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Simple expense tracker using localStorage
+    const listEl = document.getElementById('expenses-list');
+    const totalEl = document.getElementById('expenses-total');
+    const desc = document.getElementById('expense-desc');
+    const amount = document.getElementById('expense-amount');
+    const cat = document.getElementById('expense-cat');
+    const ADD_KEY = 'dailyplanner:expenses';
+
+    function loadExpenses(){
+      try{ return JSON.parse(localStorage.getItem(ADD_KEY))||[] }catch(e){return[]}
+    }
+
+    function saveExpenses(arr){ localStorage.setItem(ADD_KEY, JSON.stringify(arr)); }
+
+    function render(){
+      const items = loadExpenses();
+      listEl.innerHTML = '';
+      let total = 0;
+      items.forEach((it,idx)=>{
+        total += Number(it.amount||0);
+        const li = document.createElement('li');
+        li.style.display='flex'; li.style.justifyContent='space-between'; li.style.alignItems='center';
+        li.innerHTML = `<div><strong>${escapeHtml(it.desc)}</strong> <span style="color:var(--muted)">(${escapeHtml(it.cat)})</span></div><div style="display:flex;gap:8px;align-items:center"><div>$${Number(it.amount).toFixed(2)}</div><button data-idx="${idx}" class="todo-delete">×</button></div>`;
+        listEl.appendChild(li);
+      });
+      totalEl.textContent = 'Total: $' + total.toFixed(2);
+    }
+
+    function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+
+    document.getElementById('add-expense').addEventListener('click', ()=>{
+      const d=desc.value.trim(); const a=Number(amount.value||0); const c=cat.value.trim();
+      if(!d||!a) return;
+      const arr = loadExpenses(); arr.push({desc:d,amount:a,cat:c||''}); saveExpenses(arr); desc.value=''; amount.value=''; cat.value=''; render();
+    });
+
+    document.getElementById('clear-expenses').addEventListener('click', ()=>{ if(confirm('Clear all expenses?')){ saveExpenses([]); render(); } });
+
+    listEl.addEventListener('click', (e)=>{ if(e.target.dataset.idx){ const i=Number(e.target.dataset.idx); const arr=loadExpenses(); arr.splice(i,1); saveExpenses(arr); render(); } });
+
+    render();
+  </script>
+</body>
+</html>

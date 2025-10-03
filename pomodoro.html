@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pomodoro</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">POMODORO</h1>
+      <div class="date-controls">
+        <div class="date-input-row">
+          <label for="date-picker" class="sr-only">Select date</label>
+          <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
+        </div>
+        <div class="weekday-toggles" role="group" aria-label="Weekday selection">
+          <button type="button" class="weekday-btn" data-day="1">M</button>
+          <button type="button" class="weekday-btn" data-day="2">T</button>
+          <button type="button" class="weekday-btn" data-day="3">W</button>
+          <button type="button" class="weekday-btn" data-day="4">T</button>
+          <button type="button" class="weekday-btn" data-day="5">F</button>
+          <button type="button" class="weekday-btn" data-day="6">S</button>
+          <button type="button" class="weekday-btn" data-day="0">S</button>
+        </div>
+      </div>
+    </header>
+    <nav class="app-nav" aria-label="App navigation">
+      <a href="index.html">Planner</a>
+      <a href="habit-builder.html">Habits</a>
+      <a href="expense-tracker.html">Expenses</a>
+      <a href="pomodoro.html" class="active">Pomodoro</a>
+      <a href="work.html">Work</a>
+    </nav>
+
+    <main class="main-content">
+      <section class="section" style="text-align:center;">
+        <h2 class="section-title">Timer</h2>
+        <div id="timer-display" style="font-size:48px;font-weight:700;margin:20px 0;">25:00</div>
+        <div style="display:flex;gap:12px;justify-content:center;">
+          <button id="start-btn" class="add-btn">Start</button>
+          <button id="stop-btn" class="clear-all-btn">Stop</button>
+          <button id="reset-btn" class="add-btn">Reset</button>
+          <button onclick="location.href='index.html'" class="add-btn">Back</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Simple Pomodoro timer
+    const display = document.getElementById('timer-display');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const resetBtn = document.getElementById('reset-btn');
+
+    let defaultSeconds = 25*60;
+    let remaining = defaultSeconds;
+    let timerId = null;
+
+    function format(s){ const m=Math.floor(s/60); const sec=s%60; return String(m).padStart(2,'0')+":"+String(sec).padStart(2,'0'); }
+    function render(){ display.textContent = format(remaining); }
+
+    startBtn.addEventListener('click', ()=>{
+      if(timerId) return;
+      timerId = setInterval(()=>{
+        remaining--; if(remaining<=0){ clearInterval(timerId); timerId=null; remaining=0; render(); alert('Time is up!'); }
+        render();
+      },1000);
+    });
+
+    stopBtn.addEventListener('click', ()=>{ if(timerId){ clearInterval(timerId); timerId=null; } });
+    resetBtn.addEventListener('click', ()=>{ if(timerId){ clearInterval(timerId); timerId=null; } remaining = defaultSeconds; render(); });
+
+    render();
+  </script>
+</body>
+</html>

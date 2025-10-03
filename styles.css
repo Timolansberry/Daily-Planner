@@ -81,6 +81,41 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* App navigation */
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.app-nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.app-nav a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.app-nav a.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
 /* Screen Reader Only */
 .sr-only {
   position: absolute;

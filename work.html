@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Work</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">WORK</h1>
+      <div class="date-controls">
+        <div class="date-input-row">
+          <label for="date-picker" class="sr-only">Select date</label>
+          <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
+        </div>
+        <div class="weekday-toggles" role="group" aria-label="Weekday selection">
+          <button type="button" class="weekday-btn" data-day="1">M</button>
+          <button type="button" class="weekday-btn" data-day="2">T</button>
+          <button type="button" class="weekday-btn" data-day="3">W</button>
+          <button type="button" class="weekday-btn" data-day="4">T</button>
+          <button type="button" class="weekday-btn" data-day="5">F</button>
+          <button type="button" class="weekday-btn" data-day="6">S</button>
+          <button type="button" class="weekday-btn" data-day="0">S</button>
+        </div>
+      </div>
+    </header>
+    <nav class="app-nav" aria-label="App navigation">
+      <a href="index.html">Planner</a>
+      <a href="habit-builder.html">Habits</a>
+      <a href="expense-tracker.html">Expenses</a>
+      <a href="pomodoro.html">Pomodoro</a>
+      <a href="work.html" class="active">Work</a>
+    </nav>
+
+    <main class="main-content">
+      <section class="section">
+        <h2 class="section-title">Tasks</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="work-task-input" placeholder="New task" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+          <button id="add-work-task" class="add-btn">+</button>
+        </div>
+        <ul id="work-tasks" style="list-style:none;margin-top:12px;padding:0;display:flex;flex-direction:column;gap:8px"></ul>
+        <div style="margin-top:12px;text-align:right;"><button onclick="location.href='index.html'" class="add-btn">Back</button></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const TASK_KEY = 'dailyplanner:worktasks';
+    function load(){ try{return JSON.parse(localStorage.getItem(TASK_KEY))||[] }catch(e){return[]}}
+    function save(a){ localStorage.setItem(TASK_KEY, JSON.stringify(a)); }
+    const ul = document.getElementById('work-tasks'); const input = document.getElementById('work-task-input');
+
+    function render(){ const arr=load(); ul.innerHTML=''; arr.forEach((t,i)=>{ const li=document.createElement('li'); li.style.display='flex'; li.style.justifyContent='space-between'; li.style.alignItems='center'; li.innerHTML=`<div><strong>${escapeHtml(t.text)}</strong><div style="font-size:12px;color:var(--muted)">Time spent: ${t.seconds||0}s</div></div><div style="display:flex;gap:8px"><button data-i="${i}" class="add-btn">▶</button><button data-stop="${i}" class="clear-all-btn">⏸</button><button data-del="${i}" class="todo-delete">×</button></div>`; ul.appendChild(li); }); }
+
+    function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+
+    document.getElementById('add-work-task').addEventListener('click', ()=>{ const t=input.value.trim(); if(!t) return; const arr=load(); arr.push({text:t,seconds:0}); save(arr); input.value=''; render(); });
+    ul.addEventListener('click',(e)=>{ const idx = e.target.dataset.i || e.target.dataset.stop || e.target.dataset.del; if(idx==null) return; const i=Number(idx); const arr=load(); if(e.target.dataset.del!=null){ arr.splice(i,1); save(arr); render(); return; } if(e.target.dataset.i!=null){ // start simple interval
+      if(window._workTimer) clearInterval(window._workTimer);
+      window._workTimer = setInterval(()=>{ const a=load(); a[i].seconds = (a[i].seconds||0)+1; save(a); render(); },1000);
+    } if(e.target.dataset.stop!=null){ if(window._workTimer) { clearInterval(window._workTimer); window._workTimer=null; } }
+    });
+
+    render();
+  </script>
+</body>
+</html>
