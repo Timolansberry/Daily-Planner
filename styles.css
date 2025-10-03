@@ -272,6 +272,331 @@ body {
   }
 }
 
+/* Habit Builder Styles */
+.habits-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.habits-controls {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.add-habit-btn, .book-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-habit-btn:hover, .book-btn:hover {
+  background: #0099cc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 179, 255, 0.3);
+}
+
+.habits-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.habit-tab {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-weight: 500;
+}
+
+.habit-tab.active {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.habit-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.habits-status {
+  margin-bottom: var(--space-4);
+  color: var(--error);
+  font-weight: 500;
+}
+
+.habits-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.habit-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  background: rgba(0, 179, 255, 0.1);
+  border: 1px solid rgba(0, 179, 255, 0.2);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.habit-item:hover {
+  background: rgba(0, 179, 255, 0.15);
+  border-color: var(--accent);
+}
+
+.habit-text {
+  color: var(--text);
+  font-weight: 500;
+  flex: 1;
+}
+
+.habit-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.habit-action-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+.habit-action-btn.no {
+  background: var(--error);
+  color: white;
+}
+
+.habit-action-btn.skip {
+  background: var(--muted);
+  color: white;
+}
+
+.habit-action-btn.yes {
+  background: var(--success);
+  color: white;
+}
+
+.habit-action-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Habit Creation Modal */
+.habit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.habit-modal-content {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.habit-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.habit-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--muted);
+  cursor: pointer;
+  padding: var(--space-1);
+}
+
+.habit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-group label {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.form-group input, .form-group textarea {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--font-size-base);
+}
+
+.form-group input:focus, .form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.color-picker input[type="color"] {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.toggle-switch {
+  position: relative;
+  width: 3rem;
+  height: 1.5rem;
+  background: var(--border);
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: white;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.toggle-container input:checked + .toggle-switch {
+  background: var(--accent);
+}
+
+.toggle-container input:checked + .toggle-switch::after {
+  transform: translateX(1.5rem);
+}
+
+.frequency-buttons {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.freq-btn {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.freq-btn.active {
+  background: var(--surface);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.days-selector {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.day-btn {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.day-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.save-habit-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: var(--space-2);
+}
+
+.save-habit-btn:hover {
+  background: #0099cc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 179, 255, 0.3);
+}
+
 /* Light mode styles */
 [data-theme="light"] {
   --bg: #ffffff;

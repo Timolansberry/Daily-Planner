@@ -69,23 +69,99 @@
 
         <main class="main-content">
             <section class="section habits-section">
-                <h2 class="section-title">HABITS</h2>
+                <div class="habits-header">
+                    <h2 class="section-title">HABITS</h2>
+                    <div class="habits-controls">
+                        <button type="button" id="add-habit-btn" class="add-habit-btn" aria-label="Add new habit">+</button>
+                        <button type="button" class="book-btn" aria-label="View habit log">📖</button>
+                    </div>
+                </div>
 
-                <div class="habit-input-container">
-                    <label for="habit-input" class="sr-only">Add a new habit</label>
-                    <input type="text" id="habit-input" class="habit-input" placeholder="New habit (e.g. Meditate)" aria-label="Add habit">
-                    <button type="button" id="add-habit-btn" class="add-btn" aria-label="Add habit">+</button>
+                <div class="habits-tabs">
+                    <button type="button" class="habit-tab active" data-tab="today">Today</button>
+                    <button type="button" class="habit-tab" data-tab="weekly">Weekly</button>
+                    <button type="button" class="habit-tab" data-tab="overall">Overall</button>
+                </div>
+
+                <div class="habits-status">
+                    <span id="completion-count">0 completed</span>
                 </div>
 
                 <ul class="habits-list" role="list" aria-label="Habits">
                     <!-- habits populated by script.js -->
                 </ul>
 
-                <div class="habit-actions">
-                    <button onclick="location.href='index.html'" type="button" class="btn">Back to Planner</button>
-                </div>
             </section>
         </main>
+
+        <!-- Habit Creation Modal -->
+        <div id="habit-modal" class="habit-modal" style="display: none;">
+            <div class="habit-modal-content">
+                <div class="habit-modal-header">
+                    <button type="button" class="habit-modal-close" aria-label="Close modal">&times;</button>
+                    <h3>Create Habit</h3>
+                </div>
+                <form class="habit-form">
+                    <div class="form-group">
+                        <label for="habit-title">Title</label>
+                        <input type="text" id="habit-title" placeholder="Title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="habit-description">Description</label>
+                        <textarea id="habit-description" placeholder="Description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="habit-color">Color</label>
+                        <div class="color-picker">
+                            <input type="color" id="habit-color" value="#00b3ff">
+                            <span class="color-preview"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="habit-repeat">Repeat</label>
+                        <div class="toggle-container">
+                            <input type="checkbox" id="habit-repeat" checked>
+                            <label for="habit-repeat" class="toggle-switch"></label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Frequency</label>
+                        <div class="frequency-buttons">
+                            <button type="button" class="freq-btn active" data-freq="daily">Daily</button>
+                            <button type="button" class="freq-btn" data-freq="weekly">Weekly</button>
+                            <button type="button" class="freq-btn" data-freq="monthly">Monthly</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>On these days</label>
+                        <div class="days-selector">
+                            <button type="button" class="day-btn active" data-day="1">M</button>
+                            <button type="button" class="day-btn active" data-day="2">T</button>
+                            <button type="button" class="day-btn active" data-day="3">W</button>
+                            <button type="button" class="day-btn active" data-day="4">T</button>
+                            <button type="button" class="day-btn active" data-day="5">F</button>
+                            <button type="button" class="day-btn active" data-day="6">S</button>
+                            <button type="button" class="day-btn active" data-day="0">S</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="habit-reminder">Reminder</label>
+                        <div class="toggle-container">
+                            <input type="checkbox" id="habit-reminder">
+                            <label for="habit-reminder" class="toggle-switch"></label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="habit-goal">Goal</label>
+                        <div class="toggle-container">
+                            <input type="checkbox" id="habit-goal">
+                            <label for="habit-goal" class="toggle-switch"></label>
+                        </div>
+                    </div>
+                    <button type="submit" class="save-habit-btn">Save</button>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div class="sr-only" aria-live="polite" id="status-announcements"></div>

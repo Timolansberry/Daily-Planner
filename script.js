@@ -209,7 +209,7 @@ function getEmptyPlan() {
       dinner: ''
     },
     water: 0,
-    // Habits: each habit has { id, text, lastCompletedDate }
+    // Habits: each habit has { id, title, description, color, repeat, reminder, goal, frequency, days, createdAt, completions }
     habits: []
   };
 }
@@ -710,125 +710,243 @@ class PlannerManager {
   // HABITS SECTION
   // ========================================================================
 
+
   renderHabits() {
     const container = document.querySelector('.habits-list');
     if (!container) return;
 
     container.innerHTML = '';
 
-    // Ensure we have an array to iterate over
-    if (!Array.isArray(currentPlan.habits)) {
-      currentPlan.habits = [];
+    if (currentPlan.habits && currentPlan.habits.length > 0) {
+      const today = new Date();
+      const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      
+      // Filter habits that should appear today
+      const todaysHabits = currentPlan.habits.filter(habit => {
+        // If no days specified (old habits), show every day
+        if (!habit.days || habit.days.length === 0) {
+          return true;
+        }
+        // Check if current day is in the habit's selected days
+        return habit.days.includes(currentDay);
+      });
+
+      if (todaysHabits.length > 0) {
+        todaysHabits.forEach(habit => {
+          const li = document.createElement('li');
+          li.className = 'habit-item';
+          li.dataset.id = habit.id;
+          
+          li.innerHTML = `
+            <span class="habit-text">${habit.title}</span>
+            <div class="habit-actions">
+              <button type="button" class="habit-action-btn no" data-action="no" aria-label="Mark as not done">✕</button>
+              <button type="button" class="habit-action-btn skip" data-action="skip" aria-label="Skip for today">—</button>
+              <button type="button" class="habit-action-btn yes" data-action="yes" aria-label="Mark as done">✓</button>
+            </div>
+          `;
+          
+          container.appendChild(li);
+        });
+      } else {
+        container.innerHTML = '<li class="empty-state">No habits scheduled for today. Click + to add a new habit!</li>';
+      }
+    } else {
+      container.innerHTML = '<li class="empty-state">No habits yet. Click + to add your first habit!</li>';
     }
 
-    const todayStr = formatDate(currentDate);
+    this.updateCompletionStatus();
+  }
 
-    if (currentPlan.habits.length === 0) {
-      const empty = document.createElement('li');
-      empty.className = 'habit-empty';
-      empty.textContent = 'No habits yet. Add one above.';
-      empty.style.color = 'var(--muted)';
-      empty.style.padding = '0.5rem 0';
-      container.appendChild(empty);
-      return;
+  updateCompletionStatus() {
+    const completionCount = document.getElementById('completion-count');
+    if (completionCount && currentPlan.habits) {
+      const today = new Date();
+      const currentDay = today.getDay();
+      
+      // Only count habits that are scheduled for today
+      const todaysHabits = currentPlan.habits.filter(habit => {
+        if (!habit.days || habit.days.length === 0) {
+          return true;
+        }
+        return habit.days.includes(currentDay);
+      });
+      
+      const completedToday = todaysHabits.filter(habit => 
+        habit.completions && habit.completions[this.getTodayString()] === 'completed'
+      ).length;
+      
+      completionCount.textContent = `${completedToday} completed`;
     }
+  }
 
-    currentPlan.habits.forEach(habit => {
-      const doneForToday = habit.lastCompletedDate === todayStr;
-
-      const li = document.createElement('li');
-      li.className = `habit-item ${doneForToday ? 'hidden-for-day' : ''}`;
-      li.dataset.id = habit.id;
-      li.innerHTML = `
-        <button type="button" class="habit-button" aria-label="Toggle habit">${escapeHtml(habit.text)}</button>
-        <button type="button" class="habit-delete" aria-label="Delete habit">×</button>
-      `;
-
-      container.appendChild(li);
-    });
+  getTodayString() {
+    return new Date().toISOString().split('T')[0];
   }
 
   bindHabitsEvents() {
-    // Avoid binding events multiple times
-    if (this._habitsBound) return;
-    this._habitsBound = true;
-
     const container = document.querySelector('.habits-list');
-
-    // Central addHabit routine — looks up input at runtime to be resilient
-    const addHabit = () => {
-      const addInput = document.getElementById('habit-input');
-      if (!addInput) return;
-      const text = addInput.value.trim();
-      if (!text) return;
-
-      // Ensure habits array exists (in case of older plan shapes)
-      if (!Array.isArray(currentPlan.habits)) currentPlan.habits = [];
-
-      const newHabit = { id: generateId(), text, lastCompletedDate: null };
-      currentPlan.habits.push(newHabit);
-      addInput.value = '';
-      // (debug banner removed)
-
-      this.renderHabits();
-      // Try to save immediately and also trigger the debounced save
-      try {
-        storage.set(formatDate(currentDate), currentPlan).catch(err => console.error('Immediate save failed', err));
-      } catch (err) {
-        console.error('Error calling storage.set', err);
-      }
-      this.triggerSave();
-  announceStatus('Habit added');
-    };
-
-    // Bind direct handlers if elements are present
     const addBtn = document.getElementById('add-habit-btn');
-    const addInput = document.getElementById('habit-input');
-    if (addBtn) addBtn.addEventListener('click', addHabit);
-    if (addInput) addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addHabit(); } });
-
-    // Delegated fallback: catch clicks on the button even if it was added later
-    document.addEventListener('click', (e) => {
-      if (e.target && e.target.id === 'add-habit-btn') {
-        addHabit();
-      }
-    });
+    const modal = document.getElementById('habit-modal');
+    const closeBtn = document.querySelector('.habit-modal-close');
+    const form = document.querySelector('.habit-form');
 
     if (container) {
       container.addEventListener('click', (e) => {
-        const habitItem = e.target.closest('.habit-item');
-        if (!habitItem) return;
-
-        const id = habitItem.dataset.id;
-        const habit = currentPlan.habits.find(h => h.id === id);
-        if (!habit) return;
-
-        // Delete
-        if (e.target.classList.contains('habit-delete')) {
-          currentPlan.habits = currentPlan.habits.filter(h => h.id !== id);
-          this.renderHabits();
-          this.triggerSave();
-          announceStatus('Habit deleted');
-          return;
-        }
-
-        // Toggle for today: mark completed (hide for day) or unmark
-        if (e.target.classList.contains('habit-button')) {
-          const todayStr = formatDate(currentDate);
-          if (habit.lastCompletedDate === todayStr) {
-            habit.lastCompletedDate = null;
-            announceStatus('Habit reset for today');
-          } else {
-            habit.lastCompletedDate = todayStr;
-            announceStatus('Habit completed for today');
-          }
-
-          this.renderHabits();
-          this.triggerSave();
+        if (e.target.classList.contains('habit-action-btn')) {
+          const habitItem = e.target.closest('.habit-item');
+          const habitId = habitItem.dataset.id;
+          const action = e.target.dataset.action;
+          
+          this.handleHabitAction(habitId, action);
         }
       });
     }
+
+    // Clear any existing event listeners and bind new ones
+    if (addBtn) {
+      // Remove any existing listeners by cloning the element
+      const newAddBtn = addBtn.cloneNode(true);
+      addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+      
+      newAddBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (modal) {
+          modal.style.display = 'flex';
+        }
+      });
+    }
+
+    if (closeBtn && modal) {
+      closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.createHabit();
+      });
+    }
+
+    // Tab switching
+    const tabs = document.querySelectorAll('.habit-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        // Handle tab switching logic here
+      });
+    });
+
+    // Day button toggling in modal
+    const dayButtons = document.querySelectorAll('.day-btn');
+    dayButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+      });
+    });
+
+    // Frequency button switching
+    const freqButtons = document.querySelectorAll('.freq-btn');
+    freqButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        freqButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
   }
+
+  handleHabitAction(habitId, action) {
+    const habit = currentPlan.habits.find(h => h.id === habitId);
+    if (!habit) return;
+
+    const today = this.getTodayString();
+    if (!habit.completions) habit.completions = {};
+
+    if (action === 'yes') {
+      habit.completions[today] = 'completed';
+    } else if (action === 'no') {
+      habit.completions[today] = 'not_done';
+    } else if (action === 'skip') {
+      habit.completions[today] = 'skipped';
+    }
+
+    this.triggerSave();
+    this.updateCompletionStatus();
+    announceStatus(`Habit ${action === 'yes' ? 'completed' : action === 'no' ? 'marked as not done' : 'skipped'}`);
+  }
+
+  createHabit() {
+    const title = document.getElementById('habit-title').value.trim();
+    const description = document.getElementById('habit-description').value.trim();
+    const color = document.getElementById('habit-color').value;
+    const repeat = document.getElementById('habit-repeat').checked;
+    const reminder = document.getElementById('habit-reminder').checked;
+    const goal = document.getElementById('habit-goal').checked;
+
+    if (!title) {
+      announceStatus('Please enter a habit title');
+      return;
+    }
+
+    // Get selected days
+    const selectedDays = [];
+    const dayButtons = document.querySelectorAll('.day-btn.active');
+    dayButtons.forEach(btn => {
+      selectedDays.push(parseInt(btn.dataset.day));
+    });
+
+    // Get selected frequency
+    const activeFreqBtn = document.querySelector('.freq-btn.active');
+    const frequency = activeFreqBtn ? activeFreqBtn.dataset.freq : 'daily';
+
+    const habit = {
+      id: generateId(),
+      title: title,
+      description: description,
+      color: color,
+      repeat: repeat,
+      reminder: reminder,
+      goal: goal,
+      frequency: frequency,
+      days: selectedDays,
+      createdAt: new Date().toISOString(),
+      completions: {}
+    };
+
+    // Ensure habits array exists
+    if (!currentPlan.habits) {
+      currentPlan.habits = [];
+    }
+    
+    currentPlan.habits.push(habit);
+    
+    console.log('Created habit:', habit);
+    console.log('All habits:', currentPlan.habits);
+
+    this.triggerSave();
+    this.renderHabits();
+    
+    // Close modal and reset form
+    document.getElementById('habit-modal').style.display = 'none';
+    document.querySelector('.habit-form').reset();
+    
+    announceStatus('Habit created successfully');
+  }
+
+
+
 }
 
 // ============================================================================
@@ -963,6 +1081,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Bind habits (habit-builder page) separately
     try { planner.bindHabitsEvents(); } catch (err) { console.warn('bindHabitsEvents failed', err); }
+    try { planner.renderHabits(); } catch (err) { console.warn('renderHabits failed', err); }
     
     // Bind clear all buttons only on the planner (index) page
     // Determine current page filename ('' or 'index.html' considered planner)
