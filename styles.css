@@ -163,6 +163,34 @@ body {
     z-index: 1300;
   }
 
+  /* Make the hamburger clearly visible on small screens */
+  .nav-toggle {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.04);
+    color: var(--accent);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  }
+
+  /* Draw the three hamburger lines using a pseudo element for crisp rendering */
+  .nav-toggle::before {
+    content: "";
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+    box-shadow: 0 6px 0 currentColor, 0 -6px 0 currentColor;
+    border-radius: 2px;
+  }
+
+  .nav-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0,179,255,0.12);
+  }
+
   /* reveal nav when header has nav-open as an ancestor */
   .header.nav-open .app-nav,
   /* sibling case: header followed by nav */

@@ -884,19 +884,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Bind habits (habit-builder page) separately
     try { planner.bindHabitsEvents(); } catch (err) { console.warn('bindHabitsEvents failed', err); }
     
-    // Bind clear all buttons (both mobile and desktop)
+    // Bind clear all buttons only on the planner (index) page
+    // Determine current page filename ('' or 'index.html' considered planner)
+    const pageName = window.location.pathname.split('/').pop();
+    const isPlannerPage = (!pageName || pageName === 'index.html' || pageName === 'index.htm');
+
     const clearBtnMobile = document.getElementById('clear-all-btn-mobile');
     const clearBtnDesktop = document.getElementById('clear-all-btn-desktop');
-    
-    if (clearBtnMobile) {
-      clearBtnMobile.addEventListener('click', () => {
-        planner.clearAllData();
-      });
-    }
-    
-    if (clearBtnDesktop) {
-      clearBtnDesktop.addEventListener('click', () => {
-        planner.clearAllData();
+
+    if (isPlannerPage) {
+      if (clearBtnMobile) {
+        clearBtnMobile.style.display = '';
+        clearBtnMobile.addEventListener('click', () => planner.clearAllData());
+      }
+      if (clearBtnDesktop) {
+        clearBtnDesktop.style.display = '';
+        clearBtnDesktop.addEventListener('click', () => planner.clearAllData());
+      }
+    } else {
+      // Hide clear-all controls on non-planner pages to avoid confusion
+      const els = document.querySelectorAll('.clear-all-btn');
+      els.forEach(el => {
+        el.style.display = 'none';
       });
     }
     
