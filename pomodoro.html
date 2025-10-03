@@ -45,64 +45,183 @@
         </div>
       </div>
     </section>
+    <!-- Pomodoro clock UI -->
+    <div class="clock" aria-label="Pomodoro clock">
+      <div class="timer">
+        <div class="progress-wrap">
+          <!-- SVG circle progress for smooth animation -->
+          <svg class="progress-svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <circle class="progress-bg" cx="50" cy="50" r="44" fill="none" stroke-width="6"></circle>
+            <circle id="progress-circle" class="progress-fg session" cx="50" cy="50" r="44" fill="none" stroke-width="6" stroke-linecap="round" stroke-dasharray="276.46" stroke-dashoffset="276.46"></circle>
+          </svg>
+          <div id="main-display" class="main-display">25:00</div>
+        </div>
+      </div>
+
+      <div class="session-info">
+        <div class="session-count"><h2>Pomodoro</h2></div>
+      </div>
+
+      <div class="settings">
+        <div class="time-session">
+          <h6>Session</h6>
+          <div class="time-session-display">25 min</div>
+          <div class="control-row">
+            <button class="btn small minus" id="sess-minus" aria-label="Decrease session">-</button>
+            <button class="btn small plus" id="sess-plus" aria-label="Increase session">+</button>
+          </div>
+        </div>
+        <div class="time-break">
+          <h6>Break</h6>
+          <div class="time-break-display">5 min</div>
+          <div class="control-row">
+            <button class="btn small minus" id="break-minus" aria-label="Decrease break">-</button>
+            <button class="btn small plus" id="break-plus" aria-label="Increase break">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn time-start" id="time-start" aria-pressed="false">Start</button>
+        <button class="btn time-reset" id="time-reset">Reset</button>
+      </div>
+    </div>
+
     <script>
       (function(){
+        // Nav toggle (keeps existing behavior)
         const header = document.querySelector('.header');
         const btn = document.getElementById('nav-toggle');
-        const nav = document.querySelector('.app-nav');
         const root = document.documentElement;
-        if(!btn || !header) return;
-        btn.setAttribute('aria-expanded','false');
-        btn.addEventListener('click', ()=>{
-          const openLocal = header.classList.toggle('nav-open');
-          const openGlobal = root.classList.toggle('nav-open');
-          btn.setAttribute('aria-expanded', String(openLocal || openGlobal));
+        if (btn && header) {
+          btn.setAttribute('aria-expanded','false');
+          btn.addEventListener('click', ()=>{
+            const expanded = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', String(!expanded));
+            header.classList.toggle('nav-open');
+            root.classList.toggle('nav-open');
+          });
+          // click-outside-to-close
+          document.addEventListener('click', (e)=>{
+            const nav = document.querySelector('.app-nav');
+            if (!nav) return;
+            if (!nav.contains(e.target) && !btn.contains(e.target) && header.classList.contains('nav-open')){
+              header.classList.remove('nav-open');
+              root.classList.remove('nav-open');
+              btn.setAttribute('aria-expanded','false');
+            }
+          });
+        }
+
+        // Pomodoro controller
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+  const progressEl = document.getElementById('progress-circle');
+        const displayEl = $('#main-display');
+        const sessDisplay = $('.time-session-display');
+        const breakDisplay = $('.time-break-display');
+        const startBtn = $('#time-start');
+        const resetBtn = $('#time-reset');
+
+        let sessionMinutes = 25;
+        let breakMinutes = 5;
+        let remaining = sessionMinutes * 60;
+        let isRunning = false;
+        let isBreak = false;
+        let timerId = null;
+
+        function formatTime(secs){
+          const m = Math.floor(secs/60).toString().padStart(2,'0');
+          const s = Math.floor(secs%60).toString().padStart(2,'0');
+          return `${m}:${s}`;
+        }
+
+        function render(){
+          displayEl.textContent = formatTime(remaining);
+          sessDisplay.textContent = `${sessionMinutes} min`;
+          breakDisplay.textContent = `${breakMinutes} min`;
+          const total = (isBreak ? breakMinutes*60 : sessionMinutes*60);
+          const pct = Math.max(0, Math.min(100, ((total - remaining)/total) * 100));
+          // update SVG stroke-dashoffset for smooth animation
+          if (progressEl) {
+            const r = progressEl.getAttribute('r');
+            const radius = Number(r);
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference * (1 - pct / 100);
+            progressEl.style.transition = 'stroke-dashoffset 0.4s linear';
+            progressEl.style.strokeDasharray = `${circumference}`;
+            progressEl.style.strokeDashoffset = `${offset}`;
+            progressEl.classList.toggle('break', isBreak);
+          }
+        }
+
+        function tick(){
+          if(remaining > 0){
+            remaining -= 1;
+            render();
+          } else {
+            // switch modes
+            isBreak = !isBreak;
+            remaining = (isBreak ? breakMinutes*60 : sessionMinutes*60);
+            render();
+          }
+        }
+
+        function start(){
+          if(isRunning) return;
+          isRunning = true;
+          startBtn.textContent = 'Pause';
+          startBtn.setAttribute('aria-pressed','true');
+          timerId = setInterval(tick, 1000);
+        }
+        function pause(){
+          if(!isRunning) return;
+          isRunning = false;
+          startBtn.textContent = 'Start';
+          startBtn.setAttribute('aria-pressed','false');
+          clearInterval(timerId);
+        }
+        function reset(){
+          pause();
+          isBreak = false;
+          remaining = sessionMinutes * 60;
+          render();
+        }
+
+        // Controls
+        startBtn && startBtn.addEventListener('click', ()=>{
+          if(isRunning) pause(); else start();
         });
-        nav && nav.addEventListener('click', (e)=>{ if(e.target.tagName==='A'){ header.classList.remove('nav-open'); root.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
-        document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ header.classList.remove('nav-open'); root.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
+        resetBtn && resetBtn.addEventListener('click', ()=> reset());
+
+        // session / break adjusters
+        $('#sess-plus') && $('#sess-plus').addEventListener('click', ()=>{
+          sessionMinutes = Math.min(60, sessionMinutes + 1);
+          if(!isRunning && !isBreak) remaining = sessionMinutes*60;
+          render();
+        });
+        $('#sess-minus') && $('#sess-minus').addEventListener('click', ()=>{
+          sessionMinutes = Math.max(1, sessionMinutes - 1);
+          if(!isRunning && !isBreak) remaining = sessionMinutes*60;
+          render();
+        });
+        $('#break-plus') && $('#break-plus').addEventListener('click', ()=>{
+          breakMinutes = Math.min(30, breakMinutes + 1);
+          if(!isRunning && isBreak) remaining = breakMinutes*60;
+          render();
+        });
+        $('#break-minus') && $('#break-minus').addEventListener('click', ()=>{
+          breakMinutes = Math.max(1, breakMinutes - 1);
+          if(!isRunning && isBreak) remaining = breakMinutes*60;
+          render();
+        });
+
+        // initial render
+        render();
       })();
     </script>
 
-    <main class="main-content">
-      <section class="section" style="text-align:center;">
-        <h2 class="section-title">Timer</h2>
-        <div id="timer-display" style="font-size:48px;font-weight:700;margin:20px 0;">25:00</div>
-        <div style="display:flex;gap:12px;justify-content:center;">
-          <button id="start-btn" class="add-btn">Start</button>
-          <button id="stop-btn" class="clear-all-btn">Stop</button>
-          <button id="reset-btn" class="add-btn">Reset</button>
-          <button onclick="location.href='index.html'" class="add-btn">Back</button>
-        </div>
-      </section>
-    </main>
   </div>
-
-  <script>
-    // Simple Pomodoro timer
-    const display = document.getElementById('timer-display');
-    const startBtn = document.getElementById('start-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    const resetBtn = document.getElementById('reset-btn');
-
-    let defaultSeconds = 25*60;
-    let remaining = defaultSeconds;
-    let timerId = null;
-
-    function format(s){ const m=Math.floor(s/60); const sec=s%60; return String(m).padStart(2,'0')+":"+String(sec).padStart(2,'0'); }
-    function render(){ display.textContent = format(remaining); }
-
-    startBtn.addEventListener('click', ()=>{
-      if(timerId) return;
-      timerId = setInterval(()=>{
-        remaining--; if(remaining<=0){ clearInterval(timerId); timerId=null; remaining=0; render(); alert('Time is up!'); }
-        render();
-      },1000);
-    });
-
-    stopBtn.addEventListener('click', ()=>{ if(timerId){ clearInterval(timerId); timerId=null; } });
-    resetBtn.addEventListener('click', ()=>{ if(timerId){ clearInterval(timerId); timerId=null; } remaining = defaultSeconds; render(); });
-
-    render();
-  </script>
-</body>
-</html>
+  </body>
+  </html>

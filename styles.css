@@ -406,6 +406,13 @@ body {
   gap: var(--space-4);
 }
 
+/* Make the date-controls block match the clock card width and centering */
+.date-controls {
+  max-width: 420px;
+  width: min(420px, 100%);
+  margin: 0 auto;
+}
+
 .date-input-row {
   display: flex;
   align-items: center;
@@ -493,6 +500,107 @@ body {
 .weekday-btn.active:active {
   background: #0099cc;
   transform: scale(0.95);
+}
+
+/* Pomodoro clock styles (project theme) */
+
+.clock {
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  /* make the clock a block with a controlled max width and center it */
+  display: block;
+  max-width: 420px;
+  width: min(420px, 100%);
+  margin: 0 auto;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+}
+
+.clock .timer { justify-content: center; }
+
+.clock .timer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+
+.progress-radial {
+  position: relative;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(255,255,255,0.02));
+  box-shadow: inset 0 -6px 18px rgba(0,0,0,0.25);
+}
+
+.progress-radial.session { border: 6px solid rgba(0,163,255,0.18); }
+.progress-radial.break { border: 6px solid rgba(244,67,54,0.18); }
+
+/* New SVG progress styles */
+.progress-wrap {
+  position: relative;
+  width: 8rem;
+  height: 8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.progress-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg); /* start at 12 o'clock */
+}
+.progress-bg {
+  stroke: rgba(255,255,255,0.04);
+}
+.progress-fg {
+  stroke: var(--accent);
+  transition: stroke 200ms ease;
+  transform-origin: 50% 50%;
+}
+.progress-fg.break { stroke: var(--error); }
+
+/* ensure main-display sits above the svg */
+.progress-wrap .main-display {
+  position: absolute;
+  z-index: 2;
+}
+
+.main-display {
+  background: var(--surface);
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family: monospace;
+  font-size: 1.6rem;
+  color: var(--text);
+}
+
+.session-info .session-count h2 { margin: 0; color: var(--muted); font-size: 1rem; }
+
+.settings { display:flex; justify-content:space-around; gap:var(--space-4); margin-bottom: var(--space-4); }
+.settings h6 { color: var(--muted); font-size: 0.85rem; margin-bottom: var(--space-2); }
+.time-session-display, .time-break-display { color: var(--text); font-weight:600; margin: 0 0 var(--space-2) 0; }
+
+.control-row { display:flex; gap:var(--space-2); }
+.btn { background: var(--surface); color:var(--text); border:1px solid var(--border); padding:0.5rem 0.75rem; border-radius: var(--radius-md); cursor:pointer; }
+.btn.small { padding:0.35rem 0.5rem; min-width:36px; }
+.time-start { background: var(--accent); color: var(--bg); border-color: var(--accent); box-shadow:0 6px 14px rgba(0,179,255,0.12); }
+.time-reset { background: transparent; border:1px solid var(--border); color: var(--muted); }
+
+.controls { display:flex; gap:var(--space-3); justify-content:center; }
+
+@media (max-width: 600px) {
+  .clock { max-width: 320px; }
+  .progress-wrap { width: 6.5rem; height: 6.5rem; }
+  .progress-wrap .main-display { width:5.2rem; height:5.2rem; font-size:1.25rem; }
 }
 
 /* Clear All Button */
