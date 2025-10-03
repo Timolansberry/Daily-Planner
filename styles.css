@@ -88,6 +88,7 @@ body {
   align-items: center;
   justify-content: center;
   margin-top: 0.5rem;
+  padding-top: 10px;
 }
 
 .app-nav a {
@@ -229,6 +230,43 @@ body {
 /* ensure header has extra right padding so absolute nav-toggle won't overlap centered title */
 .header {
   padding-right: 3.5rem;
+}
+
+/* Desktop / fullscreen layout: place nav to the right and hide hamburger */
+@media (min-width: 1024px) {
+  .header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-bottom: var(--space-4);
+    padding-right: var(--space-4);
+    margin-bottom: var(--space-6);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Title aligns left in horizontal header */
+  .title {
+    text-align: left;
+  }
+
+  /* App nav moves to the right side */
+  .app-nav {
+    margin-top: 0;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  /* Hide hamburger menu on fullscreen / desktop */
+  .nav-toggle {
+    display: none;
+  }
+
+  /* Slightly reduce header bottom padding so calendar sits nicely below */
+  .calendar-section {
+    margin-top: var(--space-4);
+  }
 }
 
 .title {
@@ -1143,7 +1181,7 @@ body {
 .habit-input-container {
   display: flex;
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
   align-items: center;
 }
 
@@ -1155,13 +1193,17 @@ body {
   color: var(--text);
   font-size: var(--font-size-base);
   padding: var(--space-3) var(--space-4);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
 .habit-input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--shadow-light);
+}
+
+.habit-input::placeholder {
+  color: var(--muted);
 }
 
 .habits-list {
@@ -1181,6 +1223,12 @@ body {
   background: rgba(255,255,255,0.02);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.habit-item:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--accent);
 }
 
 .habit-button {
@@ -1192,6 +1240,13 @@ body {
   font-size: var(--font-size-base);
   padding: 0;
   cursor: pointer;
+}
+
+.habit-button:focus {
+  outline: none;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1);
 }
 
 .habit-delete {
@@ -1206,10 +1261,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.habit-item:hover .habit-delete {
+  opacity: 1;
+  transform: scale(1.03);
 }
 
 .habit-item.hidden-for-day {
   opacity: 0.6;
+  text-decoration: line-through;
+  color: var(--muted);
 }
 
 /* Reduced motion support */

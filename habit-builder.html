@@ -13,7 +13,17 @@
     <div class="container">
         <header class="header">
             <h1 class="title">HABIT BUILDER</h1>
-                <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">☰</button>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">☰</button>
+            <nav class="app-nav" aria-label="App navigation">
+                <a href="index.html">Planner</a>
+                <a href="habit-builder.html" class="active">Habits</a>
+                <a href="expense-tracker.html">Expenses</a>
+                <a href="pomodoro.html">Pomodoro</a>
+                <a href="work.html">Work</a>
+            </nav>
+        </header>
+
+        <section class="calendar-section">
             <div class="date-controls">
                 <div class="date-input-row">
                     <label for="date-picker" class="sr-only">Select date</label>
@@ -36,14 +46,7 @@
                     <span class="clear-text">Clear All</span>
                 </button>
             </div>
-                    <nav class="app-nav" aria-label="App navigation">
-                        <a href="index.html">Planner</a>
-                        <a href="habit-builder.html" class="active">Habits</a>
-                        <a href="expense-tracker.html">Expenses</a>
-                        <a href="pomodoro.html">Pomodoro</a>
-                        <a href="work.html">Work</a>
-                    </nav>
-        </header>
+        </section>
                 <script>
                     (function(){
                         const header = document.querySelector('.header');
