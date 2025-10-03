@@ -988,6 +988,10 @@ body {
   padding: var(--space-1);
 }
 
+.top-three-input::placeholder {
+  font-family: var(--font-family);
+}
+
 /* Strike-through effect for completed items */
 .top-three-item.done .top-three-input {
   text-decoration: line-through;
