@@ -236,6 +236,13 @@ class PlannerManager {
     try {
       const data = await storage.get(dateStr);
       currentPlan = data || getEmptyPlan();
+
+      // Normalize older/newer data shapes: ensure `habits` is an array
+      if (!Array.isArray(currentPlan.habits)) {
+        // If there is an older habitCompletion map, we can't reconstruct habit text here,
+        // so default to an empty array. This prevents runtime errors when rendering.
+        currentPlan.habits = [];
+      }
       this.renderAll();
       announceStatus(`Loaded plan for ${dateStr}`);
     } catch (error) {
@@ -314,6 +321,7 @@ class PlannerManager {
 
   renderTopThree() {
     const container = document.querySelector('.top-three-list');
+    if (!container) return;
     container.innerHTML = '';
 
     for (let i = 0; i < 3; i++) {
@@ -383,7 +391,11 @@ class PlannerManager {
   renderTodos() {
     const container = document.querySelector('.todo-list');
     const emptyState = document.getElementById('todo-empty-state');
-    
+    if (!container || !emptyState) {
+      console.warn('Todo elements not found');
+      return;
+    }
+
     container.innerHTML = '';
 
     if (currentPlan.todos.length === 0) {
@@ -547,6 +559,7 @@ class PlannerManager {
 
   renderSchedule() {
     const container = document.querySelector('.schedule-container');
+    if (!container) return;
     container.innerHTML = '';
 
     Object.entries(currentPlan.schedule).forEach(([time, content]) => {
@@ -581,11 +594,13 @@ class PlannerManager {
 
   renderNotes() {
     const textarea = document.getElementById('notes-textarea');
+    if (!textarea) return;
     textarea.value = currentPlan.notes;
   }
 
   bindNotesEvents() {
     const textarea = document.getElementById('notes-textarea');
+    if (!textarea) return;
     textarea.addEventListener('input', (e) => {
       currentPlan.notes = e.target.value;
       this.triggerSave();
@@ -601,13 +616,14 @@ class PlannerManager {
     const lunch = document.getElementById('lunch-input');
     const dinner = document.getElementById('dinner-input');
 
-    breakfast.value = currentPlan.meals.breakfast;
-    lunch.value = currentPlan.meals.lunch;
-    dinner.value = currentPlan.meals.dinner;
+    if (breakfast) breakfast.value = currentPlan.meals.breakfast;
+    if (lunch) lunch.value = currentPlan.meals.lunch;
+    if (dinner) dinner.value = currentPlan.meals.dinner;
   }
 
   bindMealsEvents() {
     const inputs = document.querySelectorAll('.meal-input');
+    if (!inputs || inputs.length === 0) return;
     inputs.forEach(input => {
       input.addEventListener('input', (e) => {
         const meal = e.target.id.replace('-input', '');
@@ -624,28 +640,30 @@ class PlannerManager {
   renderWater() {
     const container = document.querySelector('.water-dots');
     const count = document.getElementById('water-count');
-    
+    if (!container || !count) return;
+
     container.innerHTML = '';
-    
+
     for (let i = 0; i < 8; i++) {
       const button = document.createElement('button');
       button.className = `water-dot ${i < currentPlan.water ? 'filled' : ''}`;
       button.type = 'button';
       button.dataset.index = i;
       button.setAttribute('aria-label', `Water intake ${i + 1} of 8`);
-      
+
       container.appendChild(button);
     }
-    
+
     count.textContent = `${currentPlan.water}/8`;
   }
 
   bindWaterEvents() {
     const container = document.querySelector('.water-dots');
+    if (!container) return;
     container.addEventListener('click', (e) => {
       if (e.target.classList.contains('water-dot')) {
         const index = parseInt(e.target.dataset.index);
-        
+
         // Toggle water intake
         if (e.target.classList.contains('filled')) {
           // Unfill this dot and all after it
@@ -654,7 +672,7 @@ class PlannerManager {
           // Fill up to this dot
           currentPlan.water = index + 1;
         }
-        
+
         this.renderWater();
         this.triggerSave();
         announceStatus(`Water intake: ${currentPlan.water}/8`);
@@ -672,7 +690,22 @@ class PlannerManager {
 
     container.innerHTML = '';
 
+    // Ensure we have an array to iterate over
+    if (!Array.isArray(currentPlan.habits)) {
+      currentPlan.habits = [];
+    }
+
     const todayStr = formatDate(currentDate);
+
+    if (currentPlan.habits.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'habit-empty';
+      empty.textContent = 'No habits yet. Add one above.';
+      empty.style.color = 'var(--muted)';
+      empty.style.padding = '0.5rem 0';
+      container.appendChild(empty);
+      return;
+    }
 
     currentPlan.habits.forEach(habit => {
       const doneForToday = habit.lastCompletedDate === todayStr;
@@ -690,25 +723,50 @@ class PlannerManager {
   }
 
   bindHabitsEvents() {
-    const addInput = document.getElementById('habit-input');
-    const addBtn = document.getElementById('add-habit-btn');
+    // Avoid binding events multiple times
+    if (this._habitsBound) return;
+    this._habitsBound = true;
+
     const container = document.querySelector('.habits-list');
 
-    if (addBtn && addInput) {
-      const addHabit = () => {
-        const text = addInput.value.trim();
-        if (!text) return;
+    // Central addHabit routine — looks up input at runtime to be resilient
+    const addHabit = () => {
+      const addInput = document.getElementById('habit-input');
+      if (!addInput) return;
+      const text = addInput.value.trim();
+      if (!text) return;
 
-        currentPlan.habits.push({ id: generateId(), text, lastCompletedDate: null });
-        addInput.value = '';
-        this.renderHabits();
-        this.triggerSave();
-        announceStatus('Habit added');
-      };
+      // Ensure habits array exists (in case of older plan shapes)
+      if (!Array.isArray(currentPlan.habits)) currentPlan.habits = [];
 
-      addBtn.addEventListener('click', addHabit);
-      addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addHabit(); } });
-    }
+      const newHabit = { id: generateId(), text, lastCompletedDate: null };
+      currentPlan.habits.push(newHabit);
+      addInput.value = '';
+      // (debug banner removed)
+
+      this.renderHabits();
+      // Try to save immediately and also trigger the debounced save
+      try {
+        storage.set(formatDate(currentDate), currentPlan).catch(err => console.error('Immediate save failed', err));
+      } catch (err) {
+        console.error('Error calling storage.set', err);
+      }
+      this.triggerSave();
+  announceStatus('Habit added');
+    };
+
+    // Bind direct handlers if elements are present
+    const addBtn = document.getElementById('add-habit-btn');
+    const addInput = document.getElementById('habit-input');
+    if (addBtn) addBtn.addEventListener('click', addHabit);
+    if (addInput) addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addHabit(); } });
+
+    // Delegated fallback: catch clicks on the button even if it was added later
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'add-habit-btn') {
+        addHabit();
+      }
+    });
 
     if (container) {
       container.addEventListener('click', (e) => {
@@ -809,6 +867,7 @@ let plannerApp = null;
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('[planner] DOMContentLoaded — starting init');
   try {
     // Create planner manager
     const planner = new PlannerManager();
@@ -816,13 +875,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Create date manager
     const dateManager = new DateManager(planner);
     
-    // Bind all events
-    planner.bindNotesEvents();
-    planner.bindMealsEvents();
-    planner.bindWaterEvents();
-    planner.bindTodoEvents();
-  // Bind habits if the UI exists (habit-builder page)
-  try { planner.bindHabitsEvents(); } catch (e) { /* ignore if not present */ }
+    // Bind all events (each in its own try/catch so one failure doesn't stop init)
+    try { planner.bindNotesEvents(); } catch (err) { console.warn('bindNotesEvents failed', err); }
+    try { planner.bindMealsEvents(); } catch (err) { console.warn('bindMealsEvents failed', err); }
+    try { planner.bindWaterEvents(); } catch (err) { console.warn('bindWaterEvents failed', err); }
+    try { planner.bindTodoEvents(); } catch (err) { console.warn('bindTodoEvents failed', err); }
+
+    // Bind habits (habit-builder page) separately
+    try { planner.bindHabitsEvents(); } catch (err) { console.warn('bindHabitsEvents failed', err); }
     
     // Bind clear all buttons (both mobile and desktop)
     const clearBtnMobile = document.getElementById('clear-all-btn-mobile');
@@ -888,10 +948,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     plannerApp = planner;
     
     console.log('Daily Planner initialized successfully');
+    console.log('[planner] init complete');
     
   } catch (error) {
     console.error('Error initializing planner:', error);
     announceStatus('Error loading planner');
+    // show an on-page banner to help debugging if init fails
+    try {
+      const b = document.createElement('div');
+      b.style.position = 'fixed';
+      b.style.left = '0';
+      b.style.right = '0';
+      b.style.top = '0';
+      b.style.background = 'rgba(200,30,30,0.9)';
+      b.style.color = '#fff';
+      b.style.padding = '10px';
+      b.style.zIndex = 9999;
+      b.textContent = 'Error initializing planner — see console for details';
+      document.body.appendChild(b);
+    } catch (err) { /* ignore */ }
   }
 });
 
