@@ -161,7 +161,7 @@ body {
     width: min(320px, 80%) !important;
     transform: translateX(0) !important;
     background: var(--surface) !important;
-    padding: 1.25rem !important;
+    padding: 3rem 1.25rem 1.25rem 1.25rem !important;
     border-radius: 0 0 0 0 !important;
     box-shadow: -12px 0 32px rgba(0,0,0,0.5) !important;
     z-index: 1200 !important;
@@ -169,9 +169,10 @@ body {
     gap: 0.5rem !important;
     transition: transform 240ms var(--transition-normal) !important;
     margin-top: 0 !important;
-    padding-top: 0 !important;
+    padding-top: 3rem !important;
     opacity: 1 !important;
     visibility: visible !important;
+    justify-content: space-between !important;
   }
 
   .nav-toggle {
@@ -220,6 +221,62 @@ body {
     z-index: 1150;
     transition: opacity 0.28s ease;
   }
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: auto;
+  width: 100%;
+  justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.theme-icon {
+  font-size: 1rem;
+}
+
+.theme-text {
+  font-size: 0.875rem;
+}
+
+/* Light mode styles */
+[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #f8f9fa;
+  --text: #212529;
+  --muted: #6c757d;
+  --border: #dee2e6;
+  --accent: #007bff;
+  --accent-bg: #e3f2fd;
+}
+
+/* Dark mode styles (default) - using blue theme instead of black */
+[data-theme="dark"] {
+  --bg: #0f1419;
+  --surface: #1a2332;
+  --text: #e6f1ff;
+  --muted: #7c8db0;
+  --border: #2a3441;
+  --accent: #00b3ff;
+  --accent-bg: rgba(0, 179, 255, 0.1);
 }
 
 /* Screen Reader Only */
@@ -351,14 +408,13 @@ body {
   }
 }
 
-/* Calendar-top visual container */
+/* Calendar-top visual container - hidden */
 .calendar-top .date-controls {
-  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  /* reduce horizontal padding so date + button sit tighter */
-  padding: 0 calc(var(--space-3));
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 /* Make the input area grow and align the picker toward the left so the Clear button sits flush right */

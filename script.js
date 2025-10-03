@@ -859,16 +859,70 @@ class DateManager {
 }
 
 // ============================================================================
+// THEME MANAGEMENT
+// ============================================================================
+
+class ThemeManager {
+  constructor() {
+    this.currentTheme = localStorage.getItem('theme') || 'dark';
+    this.init();
+  }
+
+  init() {
+    // Set initial theme
+    this.setTheme(this.currentTheme);
+    
+    // Bind theme toggle events
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('#theme-toggle')) {
+        this.toggleTheme();
+      }
+    });
+  }
+
+  setTheme(theme) {
+    this.currentTheme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    
+    // Update theme toggle button text
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+      const icon = themeToggle.querySelector('.theme-icon');
+      const text = themeToggle.querySelector('.theme-text');
+      
+      if (theme === 'light') {
+        icon.textContent = '☀️';
+        text.textContent = 'Light Mode';
+      } else {
+        icon.textContent = '🌙';
+        text.textContent = 'Dark Mode';
+      }
+    }
+  }
+
+  toggleTheme() {
+    const newTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+    this.setTheme(newTheme);
+    announceStatus(`Switched to ${newTheme} mode`);
+  }
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
 // Global app instance
 let plannerApp = null;
+let themeManager = null;
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('[planner] DOMContentLoaded — starting init');
   try {
+    // Create theme manager
+    themeManager = new ThemeManager();
+    
     // Create planner manager
     const planner = new PlannerManager();
     
