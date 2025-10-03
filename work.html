@@ -90,6 +90,63 @@
     });
 
     render();
+
+    // Date picker and weekday functionality
+    (function() {
+      const datePicker = document.getElementById('date-picker');
+      const weekdayBtns = document.querySelectorAll('.weekday-btn');
+      let currentDate = new Date();
+
+      // Format date to YYYY-MM-DD string
+      function formatDate(date) {
+        return date.toISOString().split('T')[0];
+      }
+
+      // Get weekday number (0 = Sunday, 1 = Monday, etc.)
+      function getWeekday(date) {
+        return date.getDay();
+      }
+
+      // Update weekday buttons to show current day
+      function updateWeekdayButtons() {
+        const currentWeekday = getWeekday(currentDate);
+        
+        weekdayBtns.forEach(btn => {
+          const day = parseInt(btn.dataset.day);
+          btn.classList.toggle('active', day === currentWeekday);
+        });
+      }
+
+      // Go to specific weekday
+      function goToWeekday(targetDay) {
+        const currentWeekday = getWeekday(currentDate);
+        const diff = targetDay - currentWeekday;
+        
+        currentDate.setDate(currentDate.getDate() + diff);
+        datePicker.value = formatDate(currentDate);
+        updateWeekdayButtons();
+      }
+
+      // Initialize
+      if (datePicker) {
+        datePicker.value = formatDate(currentDate);
+        updateWeekdayButtons();
+        
+        // Date picker change event
+        datePicker.addEventListener('change', (e) => {
+          currentDate = new Date(e.target.value);
+          updateWeekdayButtons();
+        });
+      }
+
+      // Weekday button events
+      weekdayBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const day = parseInt(e.target.dataset.day);
+          goToWeekday(day);
+        });
+      });
+    })();
   </script>
 </body>
 </html>
