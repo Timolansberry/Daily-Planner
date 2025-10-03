@@ -135,24 +135,43 @@ body {
 }
 
 @media (max-width: 767px) {
-  /* Slide-in panel from right */
-  .app-nav {
-    display: flex;
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100vh;
-    width: min(320px, 80%);
-    transform: translateX(100%);
-    background: var(--surface);
-    padding: 1.25rem;
-    border-radius: 0 0 0 0;
-    box-shadow: -12px 0 32px rgba(0,0,0,0.5);
-  /* nav panel should sit above the page content but below the toggle */
-  z-index: 1200;
-    flex-direction: column;
-    gap: 0.5rem;
-    transition: transform 240ms var(--transition-normal);
+  /* Hide default navigation on mobile - override all base styles */
+  .header .app-nav {
+    display: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    gap: 0 !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+  }
+  
+  /* Show mobile slide-in panel when nav is open */
+  .header.nav-open .app-nav,
+  .nav-open .app-nav {
+    display: flex !important;
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    left: auto !important;
+    height: 100vh !important;
+    width: min(320px, 80%) !important;
+    transform: translateX(0) !important;
+    background: var(--surface) !important;
+    padding: 1.25rem !important;
+    border-radius: 0 0 0 0 !important;
+    box-shadow: -12px 0 32px rgba(0,0,0,0.5) !important;
+    z-index: 1200 !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    transition: transform 240ms var(--transition-normal) !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 
   .nav-toggle {
@@ -191,31 +210,15 @@ body {
     box-shadow: 0 0 0 4px rgba(0,179,255,0.12);
   }
 
-  /* reveal nav when header has nav-open as an ancestor */
-  .header.nav-open .app-nav,
-  /* sibling case: header followed by nav */
-  .header.nav-open + .app-nav,
-  /* global fallback: toggling .nav-open on root */
-  .nav-open .app-nav {
-    transform: translateX(0);
-  }
-
-  /* Backdrop via header pseudo-element */
-  /* backdrop when nav is open (supports header toggle and global .nav-open) */
+  /* Backdrop when nav is open */
   .header.nav-open::before,
   .nav-open::before {
     content: "";
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.32);
-    /* backdrop behind the panel but above page content */
     z-index: 1150;
     transition: opacity 0.28s ease;
-  }
-
-  /* Also allow global .nav-open (e.g., on documentElement) to reveal the panel */
-  .nav-open .app-nav {
-    transform: translateX(0);
   }
 }
 
