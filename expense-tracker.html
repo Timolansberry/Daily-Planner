@@ -42,14 +42,18 @@
         const header = document.querySelector('.header');
         const btn = document.getElementById('nav-toggle');
         const nav = document.querySelector('.app-nav');
+        const root = document.documentElement;
         if(!btn || !header) return;
         btn.setAttribute('aria-expanded','false');
         btn.addEventListener('click', ()=>{
-          const open = header.classList.toggle('nav-open');
-          btn.setAttribute('aria-expanded', String(open));
+          // toggle both header-local and a global root class as a fallback
+          const openLocal = header.classList.toggle('nav-open');
+          const openGlobal = root.classList.toggle('nav-open');
+          // reflect the local open state (they should stay in sync)
+          btn.setAttribute('aria-expanded', String(openLocal || openGlobal));
         });
-        nav && nav.addEventListener('click', (e)=>{ if(e.target.tagName==='A'){ header.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
-        document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ header.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
+        nav && nav.addEventListener('click', (e)=>{ if(e.target.tagName==='A'){ header.classList.remove('nav-open'); root.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
+        document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ header.classList.remove('nav-open'); root.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
       })();
     </script>
 

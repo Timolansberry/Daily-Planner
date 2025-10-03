@@ -118,7 +118,10 @@ body {
 
 /* Hamburger / responsive nav for small screens */
 .nav-toggle {
-  display: none;
+  display: inline-flex;
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--muted);
@@ -126,6 +129,8 @@ body {
   border-radius: var(--radius-md);
   font-size: 1.25rem;
   cursor: pointer;
+  /* put toggle above the nav panel so it's always tappable/visible */
+  z-index: 1300;
 }
 
 @media (max-width: 767px) {
@@ -142,7 +147,8 @@ body {
     padding: 1.25rem;
     border-radius: 0 0 0 0;
     box-shadow: -12px 0 32px rgba(0,0,0,0.5);
-    z-index: 1100;
+  /* nav panel should sit above the page content but below the toggle */
+  z-index: 1200;
     flex-direction: column;
     gap: 0.5rem;
     transition: transform 240ms var(--transition-normal);
@@ -152,21 +158,35 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    z-index: 1200;
+    /* keep toggle above the nav panel so it remains clickable */
+    z-index: 1300;
   }
 
-  /* Show panel when header has nav-open */
-  .header.nav-open .app-nav {
+  /* reveal nav when header has nav-open as an ancestor */
+  .header.nav-open .app-nav,
+  /* sibling case: header followed by nav */
+  .header.nav-open + .app-nav,
+  /* global fallback: toggling .nav-open on root */
+  .nav-open .app-nav {
     transform: translateX(0);
   }
 
   /* Backdrop via header pseudo-element */
-  .header.nav-open::before {
-    content: '';
+  /* backdrop when nav is open (supports header toggle and global .nav-open) */
+  .header.nav-open::before,
+  .nav-open::before {
+    content: "";
     position: fixed;
-    inset: 0 0 0 0;
-    background: rgba(0,0,0,0.45);
-    z-index: 1050;
+    inset: 0;
+    background: rgba(0,0,0,0.32);
+    /* backdrop behind the panel but above page content */
+    z-index: 1150;
+    transition: opacity 0.28s ease;
+  }
+
+  /* Also allow global .nav-open (e.g., on documentElement) to reveal the panel */
+  .nav-open .app-nav {
+    transform: translateX(0);
   }
 }
 
@@ -199,6 +219,16 @@ body {
   margin-bottom: var(--space-8);
   padding-bottom: var(--space-6);
   border-bottom: 1px solid var(--border);
+}
+
+/* positioning context for absolute nav-toggle */
+.header {
+  position: relative;
+}
+
+/* ensure header has extra right padding so absolute nav-toggle won't overlap centered title */
+.header {
+  padding-right: 3.5rem;
 }
 
 .title {
@@ -407,7 +437,8 @@ body {
   font-weight: bold;
   cursor: pointer;
   transition: all var(--transition-fast);
-  z-index: 1000;
+  /* keep back-to-top below the backdrop/nav when open */
+  z-index: 900;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -957,6 +988,13 @@ body {
     flex-direction: row;
     align-items: center;
     gap: var(--space-6);
+  }
+
+  /* keep nav-toggle in the header flow on wider screens to avoid overlapping centered titles */
+  .nav-toggle {
+    position: static;
+    margin-left: auto;
+    order: 2;
   }
   
   .main-content {
