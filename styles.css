@@ -1448,7 +1448,7 @@ body {
 .schedule-section,
 .meals-water-section {
   padding: var(--space-4);
-  margin: var(--space-6) var(--space-10);
+  margin: var(--space-1) var(--space-4);
 }
 
 
@@ -1469,7 +1469,7 @@ body {
   .notes-section,
   .schedule-section,
   .meals-water-section {
-    margin: var(--space-3) var(--space-5);
+    margin: 0 var(--space-2);
     padding: var(--space-3);
   }
   
