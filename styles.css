@@ -269,6 +269,128 @@ body {
   }
 }
 
+/* Calendar split layout */
+.calendar-section {
+  margin-top: var(--space-4);
+}
+
+.calendar-top {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center the content block */
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.calendar-bottom {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+/* Desktop-specific adjustments: add left/top space to the title and lay out calendar parts */
+@media (min-width: 1024px) {
+  .container {
+    /* slightly reduce left padding so calendar sits closer to content center */
+    padding-left: var(--space-6);
+    padding-top: var(--space-6);
+  }
+
+  .calendar-top .date-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* center the inner row */
+    gap: var(--space-4);
+    width: 100%;
+    /* fixed height so children (date picker + clear button) can match */
+    height: 52px;
+    padding: 0 calc(var(--space-3));
+  }
+
+  /* Align the date input to the left and the clear button to the right within the top row */
+  .date-input-row { order: 1; }
+  .clear-all-desktop { order: 2; }
+
+  .weekday-toggles {
+    justify-content: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+}
+
+/* Calendar-top visual container */
+.calendar-top .date-controls {
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  /* reduce horizontal padding so date + button sit tighter */
+  padding: 0 calc(var(--space-3));
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* Make the input area grow and align the picker toward the left so the Clear button sits flush right */
+.calendar-top .date-input-row {
+  /* prevent the row from expanding; keep it a centered fixed-width block */
+  flex: 0 0 auto;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-3);
+  padding-left: var(--space-2);
+  padding-right: var(--space-2);
+  max-width: 480px;
+  width: auto;
+}
+
+/* Make the date picker visually match other inputs */
+.date-picker {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  font-size: var(--font-size-base);
+  min-height: 44px;
+  display: inline-block;
+}
+
+.date-input-row .date-picker {
+  max-width: 200px;
+}
+
+/* Style the Clear All desktop button to match app buttons */
+.clear-all-desktop {
+  /* make the desktop clear button match the calendar height and look modern */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-width: 84px;
+  padding: 0 var(--space-4);
+  background: var(--error);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 14px rgba(244,67,54,0.12);
+  cursor: pointer;
+}
+
+/* Slight hover effect consistent with other buttons */
+.clear-all-desktop:hover { background: #e53935; transform: translateY(-2px); }
+
+/* Add extra left spacing for the title on large screens (makes it feel less cramped) */
+@media (min-width: 1024px) {
+  .header {
+    padding-left: calc(var(--space-8) + 8px);
+  }
+}
+
+/* Small tweak: ensure the date picker doesn't stretch too wide */
+.date-picker {
+  max-width: 220px;
+}
+
 .title {
   font-size: var(--font-size-3xl);
   font-weight: 700;

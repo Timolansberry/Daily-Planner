@@ -24,11 +24,20 @@
     </header>
 
     <section class="calendar-section">
-      <div class="date-controls">
-        <div class="date-input-row">
-          <label for="date-picker" class="sr-only">Select date</label>
-          <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
+      <div class="calendar-top">
+        <div class="date-controls">
+          <div class="date-input-row">
+            <label for="date-picker" class="sr-only">Select date</label>
+            <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
+            <button type="button" id="clear-all-btn-desktop" class="clear-all-btn clear-all-desktop" aria-label="Clear all data for this date">
+              <span class="clear-icon">🗑️</span>
+              <span class="clear-text">Clear All</span>
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div class="calendar-bottom">
         <div class="weekday-toggles" role="group" aria-label="Weekday selection">
           <button type="button" class="weekday-btn" data-day="1">M</button>
           <button type="button" class="weekday-btn" data-day="2">T</button>
