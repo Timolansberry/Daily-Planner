@@ -10,6 +10,7 @@
   <div class="container">
     <header class="header">
       <h1 class="title">POMODORO</h1>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">☰</button>
       <div class="date-controls">
         <div class="date-input-row">
           <label for="date-picker" class="sr-only">Select date</label>
@@ -33,6 +34,21 @@
       <a href="pomodoro.html" class="active">Pomodoro</a>
       <a href="work.html">Work</a>
     </nav>
+    <script>
+      (function(){
+        const header = document.querySelector('.header');
+        const btn = document.getElementById('nav-toggle');
+        const nav = document.querySelector('.app-nav');
+        if(!btn || !header) return;
+        btn.setAttribute('aria-expanded','false');
+        btn.addEventListener('click', ()=>{
+          const open = header.classList.toggle('nav-open');
+          btn.setAttribute('aria-expanded', String(open));
+        });
+        nav && nav.addEventListener('click', (e)=>{ if(e.target.tagName==='A'){ header.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
+        document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ header.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
+      })();
+    </script>
 
     <main class="main-content">
       <section class="section" style="text-align:center;">

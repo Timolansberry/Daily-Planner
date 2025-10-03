@@ -20,6 +20,7 @@
         <!-- Header Section -->
         <header class="header">
             <h1 class="title">DAILY PLAN</h1>
+                <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">☰</button>
             <div class="date-controls">
                 <div class="date-input-row">
                     <label for="date-picker" class="sr-only">Select date</label>
@@ -50,6 +51,25 @@
                 <a href="work.html">Work</a>
             </nav>
         </header>
+            <script>
+                (function(){
+                    const header = document.querySelector('.header');
+                    const btn = document.getElementById('nav-toggle');
+                    const nav = document.querySelector('.app-nav');
+                    if(!btn || !header) return;
+                    btn.setAttribute('aria-expanded','false');
+                    btn.addEventListener('click', ()=>{
+                        const open = header.classList.toggle('nav-open');
+                        btn.setAttribute('aria-expanded', String(open));
+                    });
+
+                    // Close when clicking a link
+                    nav && nav.addEventListener('click', (e)=>{ if(e.target.tagName==='A'){ header.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
+
+                    // Close on escape
+                    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ header.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
+                })();
+            </script>
 
         <main class="main-content">
             <!-- Left Column: Tasks and Notes -->

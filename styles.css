@@ -116,6 +116,60 @@ body {
   border-color: var(--accent);
 }
 
+/* Hamburger / responsive nav for small screens */
+.nav-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  /* Slide-in panel from right */
+  .app-nav {
+    display: flex;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: min(320px, 80%);
+    transform: translateX(100%);
+    background: var(--surface);
+    padding: 1.25rem;
+    border-radius: 0 0 0 0;
+    box-shadow: -12px 0 32px rgba(0,0,0,0.5);
+    z-index: 1100;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: transform 240ms var(--transition-normal);
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+  }
+
+  /* Show panel when header has nav-open */
+  .header.nav-open .app-nav {
+    transform: translateX(0);
+  }
+
+  /* Backdrop via header pseudo-element */
+  .header.nav-open::before {
+    content: '';
+    position: fixed;
+    inset: 0 0 0 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1050;
+  }
+}
+
 /* Screen Reader Only */
 .sr-only {
   position: absolute;
