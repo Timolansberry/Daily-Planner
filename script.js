@@ -949,6 +949,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     console.log('Daily Planner initialized successfully');
     console.log('[planner] init complete');
+    // Close nav when clicking outside the panel (backdrop area)
+    document.addEventListener('click', (e) => {
+      const root = document.documentElement;
+      const header = document.querySelector('.header');
+      const nav = document.querySelector('.app-nav');
+      const toggle = document.getElementById('nav-toggle');
+      if (!nav) return;
+
+      // If nav is open via root or header class
+      const open = root.classList.contains('nav-open') || (header && header.classList.contains('nav-open'));
+      if (!open) return;
+
+      // If click is inside the nav or on the toggle, do nothing
+      if (e.target.closest && (e.target.closest('.app-nav') || e.target.closest('#nav-toggle'))) return;
+
+      // Otherwise close the nav
+      if (header) header.classList.remove('nav-open');
+      root.classList.remove('nav-open');
+      if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    });
     
   } catch (error) {
     console.error('Error initializing planner:', error);
