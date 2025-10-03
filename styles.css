@@ -905,14 +905,18 @@ body {
 
 .top-three-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
-  padding: var(--space-3);
+  padding: calc(var(--space-2) - 3px) var(--space-3) var(--space-3) var(--space-3);
   background: rgba(0, 179, 255, 0.05);
   border: 1px solid rgba(0, 179, 255, 0.2);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
   position: relative;
+}
+
+.top-three-checkbox {
+  margin-top: 0.25rem;
 }
 
 .top-three-item:hover {
@@ -925,11 +929,11 @@ body {
 }
 
 .top-three-checkbox {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
   border: 2px solid var(--accent);
   border-radius: var(--radius-sm);
-  background: transparent;
+  background: var(--surface);
   cursor: pointer;
   transition: all var(--transition-fast);
   position: relative;
@@ -937,22 +941,26 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 179, 255, 0.1);
+  margin-top: 0.125rem;
 }
 
 .top-three-checkbox:hover {
-  border-color: #0099cc;
-  transform: scale(1.05);
+  border-color: #00b3ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 179, 255, 0.2);
 }
 
 .top-three-checkbox:checked {
-  background: var(--success);
-  border-color: var(--success);
+  background: linear-gradient(135deg, var(--accent), #0099cc);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 179, 255, 0.3);
 }
 
 .top-three-checkbox:checked::after {
   content: '✓';
   color: white;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: bold;
   line-height: 1;
 }
@@ -965,6 +973,13 @@ body {
   font-size: var(--font-size-base);
   outline: none;
   transition: all var(--transition-fast);
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  min-height: 1.5rem;
+  line-height: 1.5;
+  resize: none;
+  overflow: hidden;
 }
 
 .top-three-input:focus {
@@ -1055,13 +1070,17 @@ body {
 
 .todo-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
-  padding: var(--space-3);
+  padding: calc(var(--space-2) - 3px) var(--space-3) var(--space-3) var(--space-3);
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
+}
+
+.todo-checkbox {
+  margin-top: 0.25rem;
 }
 
 .todo-item:hover {
@@ -1081,29 +1100,37 @@ body {
 .todo-checkbox {
   width: 1.25rem;
   height: 1.25rem;
-  border: 2px solid var(--border);
+  border: 2px solid var(--accent);
   border-radius: var(--radius-sm);
-  background: transparent;
+  background: var(--surface);
   cursor: pointer;
   transition: all var(--transition-fast);
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 179, 255, 0.1);
+}
+
+.todo-checkbox:hover {
+  border-color: #00b3ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 179, 255, 0.2);
 }
 
 .todo-checkbox:checked {
-  background: var(--success);
-  border-color: var(--success);
+  background: linear-gradient(135deg, var(--accent), #0099cc);
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(0, 179, 255, 0.3);
 }
 
 .todo-checkbox:checked::after {
   content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   color: white;
   font-size: 0.75rem;
   font-weight: bold;
+  line-height: 1;
 }
 
 .todo-text {
@@ -1114,6 +1141,12 @@ body {
   font-size: var(--font-size-base);
   outline: none;
   resize: none;
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  min-height: 1.5rem;
+  line-height: 1.5;
+  overflow: hidden;
 }
 
 .todo-text:focus {

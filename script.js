@@ -333,12 +333,18 @@ class PlannerManager {
       li.innerHTML = `
         <input type="checkbox" class="top-three-checkbox" ${item.done ? 'checked' : ''} 
                data-id="${item.id}" aria-label="Complete task">
-        <input type="text" class="top-three-input" value="${item.text}" 
-               placeholder="Priority ${i + 1}..." data-id="${item.id}">
+        <textarea class="top-three-input" rows="1" data-id="${item.id}" 
+                  placeholder="Priority ${i + 1}...">${item.text}</textarea>
       `;
 
       container.appendChild(li);
     }
+
+    // Initialize auto-resize for all top-three textareas
+    const topThreeTextareas = container.querySelectorAll('.top-three-input');
+    topThreeTextareas.forEach(textarea => {
+      this.autoResizeTextarea(textarea);
+    });
 
     this.bindTopThreeEvents();
   }
@@ -374,14 +380,21 @@ class PlannerManager {
           item.text = e.target.value;
           this.triggerSave();
         }
+        // Auto-resize textarea
+        this.autoResizeTextarea(e.target);
       });
 
       input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !e.shiftKey) {
           e.target.blur();
         }
       });
     });
+  }
+
+  autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
   }
 
   // ========================================================================
@@ -421,6 +434,12 @@ class PlannerManager {
       `;
 
       container.appendChild(li);
+    });
+
+    // Initialize auto-resize for all todo textareas
+    const todoTextareas = container.querySelectorAll('.todo-text');
+    todoTextareas.forEach(textarea => {
+      this.autoResizeTextarea(textarea);
     });
   }
 
@@ -491,8 +510,15 @@ class PlannerManager {
           this.triggerSave();
           
           // Auto-resize textarea
-          e.target.style.height = 'auto';
-          e.target.style.height = e.target.scrollHeight + 'px';
+          this.autoResizeTextarea(e.target);
+        }
+      }
+    });
+
+    container.addEventListener('keydown', (e) => {
+      if (e.target.classList.contains('todo-text')) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.target.blur();
         }
       }
     });
