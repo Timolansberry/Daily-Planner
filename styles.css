@@ -1441,8 +1441,38 @@ body {
   }
 }
 
+/* Planner page sections - use margin instead of padding */
+.top-three-section,
+.todo-section,
+.notes-section,
+.schedule-section,
+.meals-water-section {
+  padding: var(--space-4);
+  margin: var(--space-6) var(--space-10);
+}
+
+
 /* Mobile-specific improvements */
 @media (max-width: 767px) {
+  .container {
+    padding: var(--space-4) var(--space-4);
+  }
+  
+  .section {
+    margin: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .top-three-section,
+  .todo-section,
+  .notes-section,
+  .schedule-section,
+  .meals-water-section {
+    margin: var(--space-3) var(--space-5);
+    padding: var(--space-3);
+  }
+  
   .weekday-btn {
     /* Ensure minimum tap target size on mobile */
     min-width: 44px;
