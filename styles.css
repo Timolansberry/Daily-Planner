@@ -231,7 +231,7 @@ body {
   padding: 0.75rem 1rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   color: var(--text);
   text-decoration: none;
   font-size: 0.875rem;
@@ -255,6 +255,21 @@ body {
 
 .theme-text {
   font-size: 0.875rem;
+}
+
+/* Hide theme text on desktop navigation bar */
+@media (min-width: 768px) {
+  .theme-toggle-btn .theme-text {
+    display: none;
+  }
+  
+  .theme-toggle-btn {
+    padding: 0.5rem;
+    width: auto;
+    min-width: 44px;
+    justify-content: center;
+    border-radius: var(--radius-md);
+  }
 }
 
 /* Light mode styles */
@@ -323,15 +338,15 @@ body {
 /* Desktop / fullscreen layout: place nav to the right and hide hamburger */
 @media (min-width: 1024px) {
   .header {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    padding-bottom: var(--space-4);
-    padding-right: var(--space-4);
-    margin-bottom: var(--space-6);
-    border-bottom: 1px solid var(--border);
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: var(--space-4) !important;
+    padding-bottom: var(--space-4) !important;
+    padding-right: var(--space-4) !important;
+    margin-bottom: var(--space-6) !important;
+    border-bottom: 1px solid var(--border) !important;
   }
 
   /* Title aligns left in horizontal header */
@@ -340,10 +355,10 @@ body {
   }
 
   /* App nav moves to the right side */
-  .app-nav {
-    margin-top: 0;
-    justify-content: flex-end;
-    gap: 0.75rem;
+  .header .app-nav {
+    margin-top: 0 !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
   }
 
   /* Hide hamburger menu on fullscreen / desktop */
@@ -1330,9 +1345,9 @@ body {
   }
   
   .header {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
   }
   
   .title {
