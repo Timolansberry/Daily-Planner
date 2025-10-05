@@ -25,10 +25,19 @@
                 <a href="expense-tracker.html">Expenses</a>
                 <a href="pomodoro.html">Pomodoro</a>
                 <a href="work.html">Work</a>
-                <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
-                    <span class="theme-icon">🌙</span>
-                    <span class="theme-text">Dark Mode</span>
-                </button>
+                <div class="nav-controls">
+                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
+                        <span class="theme-icon">🌙</span>
+                        <span class="theme-text">Dark Mode</span>
+                    </button>
+                    <div class="auth-section">
+                        <div id="auth-status" class="auth-status">
+                            <span id="user-email" class="user-email" style="display: none;"></span>
+                            <button type="button" id="sign-out-btn" class="sign-out-btn" style="display: none;">Sign Out</button>
+                        </div>
+                        <button type="button" id="sign-in-btn" class="sign-in-btn">Sign In</button>
+                    </div>
+                </div>
             </nav>
         </header>
 
@@ -171,58 +180,219 @@
         <span class="back-to-top-icon">↑</span>
     </button>
 
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="auth-modal" style="display: none;">
+        <div class="auth-modal-content">
+            <div class="auth-modal-header">
+                <button type="button" class="auth-modal-close" aria-label="Close modal">&times;</button>
+                <h3>Sign In</h3>
+            </div>
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab active" data-tab="signin">Sign In</button>
+                <button type="button" class="auth-tab" data-tab="signup">Sign Up</button>
+            </div>
+            
+            <!-- Sign In Form -->
+            <form id="signin-form" class="auth-form">
+                <div class="form-group">
+                    <label for="signin-email">Email</label>
+                    <input type="email" id="signin-email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signin-password">Password</label>
+                    <input type="password" id="signin-password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="auth-submit-btn">Sign In</button>
+                <div id="signin-error" class="auth-error" style="display: none;"></div>
+            </form>
+
+            <!-- Sign Up Form -->
+            <form id="signup-form" class="auth-form" style="display: none;">
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="Create a password (min 6 characters)" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="signup-confirm">Confirm Password</label>
+                    <input type="password" id="signup-confirm" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="auth-submit-btn">Sign Up</button>
+                <div id="signup-error" class="auth-error" style="display: none;"></div>
+            </form>
+
+            <div class="auth-divider">
+                <span>or</span>
+            </div>
+            
+            <button type="button" id="google-signin-btn" class="google-signin-btn">
+                <svg width="18" height="18" viewBox="0 0 18 18">
+                    <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 002.38-5.88c0-.57-.05-.66-.15-1.18z"/>
+                    <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2.04a4.8 4.8 0 01-7.18-2.53H1.83v2.07A8 8 0 008.98 17z"/>
+                    <path fill="#FBBC05" d="M4.5 10.49a4.8 4.8 0 010-3.02V5.4H1.83a8 8 0 000 7.17l2.67-2.08z"/>
+                    <path fill="#EA4335" d="M8.98 4.72c1.16 0 2.19.4 3.01 1.2l2.26-2.26A7.6 7.6 0 008.98 1a8 8 0 00-7.15 4.4l2.67 2.07c.64-1.94 2.4-3.75 4.48-3.75z"/>
+                </svg>
+                Continue with Google
+            </button>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            signOut, 
+            onAuthStateChanged,
+            updateProfile
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         
-        // Try to load Firebase config from separate file, fallback to demo
-        let firebaseConfig;
-        try {
-            // This will only work if firebase-config.js exists
-            const configModule = await import('./firebase-config.js');
-            firebaseConfig = configModule.firebaseConfig;
-            console.log('✅ Loaded Firebase config from file');
-        } catch (error) {
-            console.warn('⚠️ No Firebase config file found, using localStorage only');
-            console.log('📝 To enable Firebase:');
-            console.log('   1. Copy firebase-config.example.js to firebase-config.js');
-            console.log('   2. Add your Firebase project configuration');
-            console.log('   3. Refresh the page');
-            
-            // Initialize app without Firebase
-            if (window.plannerApp) {
-                window.plannerApp.initWithFirebase();
+        // Initialize Firebase
+        async function initializeFirebase() {
+            // Try to load Firebase config from separate file, fallback to demo
+            let firebaseConfig;
+            try {
+                // This will only work if firebase-config.js exists
+                const configModule = await import('./firebase-config.js');
+                firebaseConfig = configModule.firebaseConfig;
+                console.log('✅ Loaded Firebase config from file');
+            } catch (error) {
+                console.warn('⚠️ No Firebase config file found, using localStorage only');
+                console.log('📝 To enable Firebase:');
+                console.log('   1. Copy firebase-config.example.js to firebase-config.js');
+                console.log('   2. Add your Firebase project configuration');
+                console.log('   3. Refresh the page');
+                
+                // Initialize app without Firebase
+                if (window.plannerApp) {
+                    window.plannerApp.initWithFirebase();
+                }
+                return;
             }
-            return;
-        }
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const googleProvider = new GoogleAuthProvider();
 
         // Make Firebase available globally
-        window.firebase = { app, db, auth };
+        window.firebase = { app, db, auth, googleProvider };
         
-        // Sign in anonymously for demo purposes
-        // In production, you might want to implement proper authentication
+        // Authentication state change handler
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                console.log('User signed in:', user.uid);
+                console.log('User signed in:', user.uid, user.email);
+                updateAuthUI(user);
+                
                 // Initialize the app once user is authenticated
                 if (window.plannerApp) {
                     window.plannerApp.initWithFirebase();
                 }
             } else {
-                console.log('Signing in anonymously...');
-                signInAnonymously(auth).catch((error) => {
-                    console.error('Error signing in:', error);
-                });
+                console.log('No user signed in');
+                updateAuthUI(null);
             }
         });
+
+        // Authentication UI management
+        function updateAuthUI(user) {
+            console.log('updateAuthUI called with user:', user);
+            const signInBtn = document.getElementById('sign-in-btn');
+            const signOutBtn = document.getElementById('sign-out-btn');
+            const userEmail = document.getElementById('user-email');
+            const authModal = document.getElementById('auth-modal');
+
+            console.log('Auth elements found:', { signInBtn, signOutBtn, userEmail, authModal });
+
+            if (user) {
+                // User is signed in
+                console.log('User is signed in, updating UI...');
+                if (signInBtn) signInBtn.style.display = 'none';
+                if (signOutBtn) signOutBtn.style.display = 'block';
+                if (userEmail) {
+                    userEmail.textContent = user.email || 'Anonymous User';
+                    userEmail.style.display = 'block';
+                }
+                if (authModal) authModal.style.display = 'none';
+            } else {
+                // User is not signed in
+                console.log('User is not signed in, showing sign in button...');
+                if (signInBtn) signInBtn.style.display = 'block';
+                if (signOutBtn) signOutBtn.style.display = 'none';
+                if (userEmail) {
+                    userEmail.textContent = '';
+                    userEmail.style.display = 'none';
+                }
+            }
+        }
+
+        // Authentication functions
+        window.authFunctions = {
+            async signIn(email, password) {
+                try {
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    console.log('Signed in:', userCredential.user);
+                    return userCredential;
+                } catch (error) {
+                    console.error('Sign in error:', error);
+                    throw error;
+                }
+            },
+
+            async signUp(email, password) {
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    console.log('Signed up:', userCredential.user);
+                    return userCredential;
+                } catch (error) {
+                    console.error('Sign up error:', error);
+                    throw error;
+                }
+            },
+
+            async signInWithGoogle() {
+                try {
+                    const result = await signInWithPopup(auth, googleProvider);
+                    console.log('Google sign in:', result.user);
+                    return result;
+                } catch (error) {
+                    console.error('Google sign in error:', error);
+                    throw error;
+                }
+            },
+
+            async signOut() {
+                try {
+                    await signOut(auth);
+                    console.log('Signed out');
+                } catch (error) {
+                    console.error('Sign out error:', error);
+                    throw error;
+                }
+            }
+        };
+        
+        // Call the initialization function
+        initializeFirebase();
+        
+        // Ensure authentication UI is visible by default (fallback)
+        setTimeout(() => {
+            const signInBtn = document.getElementById('sign-in-btn');
+            if (signInBtn && signInBtn.style.display === 'none') {
+                console.log('Fallback: Making sign-in button visible');
+                signInBtn.style.display = 'block';
+            }
+        }, 1000);
     </script>
     
     <script src="script.js"></script>

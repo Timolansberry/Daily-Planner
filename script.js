@@ -1070,6 +1070,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Create theme manager
     themeManager = new ThemeManager();
     
+    // Initialize authentication event handlers
+    initializeAuthHandlers();
+    
     // Create planner manager
     const planner = new PlannerManager();
     
@@ -1230,23 +1233,309 @@ window.initWithFirebase = async function(userId) {
 // FIREBASE INTEGRATION COMPLETE
 // ============================================================================
 
+// ============================================================================
+// AUTHENTICATION HANDLERS
+// ============================================================================
+
+/**
+ * Initialize authentication event handlers
+ */
+function initializeAuthHandlers() {
+  // Sign in button
+  const signInBtn = document.getElementById('sign-in-btn');
+  if (signInBtn) {
+    signInBtn.addEventListener('click', () => {
+      showAuthModal();
+    });
+  }
+
+  // Sign out button
+  const signOutBtn = document.getElementById('sign-out-btn');
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', async () => {
+      try {
+        if (window.authFunctions) {
+          await window.authFunctions.signOut();
+          announceStatus('Signed out successfully');
+        }
+      } catch (error) {
+        console.error('Sign out error:', error);
+        announceStatus('Error signing out');
+      }
+    });
+  }
+
+  // Auth modal controls
+  const authModal = document.getElementById('auth-modal');
+  const authModalClose = document.querySelector('.auth-modal-close');
+  
+  if (authModalClose) {
+    authModalClose.addEventListener('click', () => {
+      hideAuthModal();
+    });
+  }
+
+  if (authModal) {
+    authModal.addEventListener('click', (e) => {
+      if (e.target === authModal) {
+        hideAuthModal();
+      }
+    });
+  }
+
+  // Auth tabs
+  const authTabs = document.querySelectorAll('.auth-tab');
+  authTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabType = tab.dataset.tab;
+      switchAuthTab(tabType);
+    });
+  });
+
+  // Auth forms
+  const signinForm = document.getElementById('signin-form');
+  const signupForm = document.getElementById('signup-form');
+  
+  if (signinForm) {
+    signinForm.addEventListener('submit', handleSignIn);
+  }
+  
+  if (signupForm) {
+    signupForm.addEventListener('submit', handleSignUp);
+  }
+
+  // Google sign in button
+  const googleSigninBtn = document.getElementById('google-signin-btn');
+  if (googleSigninBtn) {
+    googleSigninBtn.addEventListener('click', handleGoogleSignIn);
+  }
+
+  // Close modal on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && authModal && authModal.style.display === 'flex') {
+      hideAuthModal();
+    }
+  });
+}
+
+/**
+ * Show authentication modal
+ */
+function showAuthModal() {
+  const authModal = document.getElementById('auth-modal');
+  if (authModal) {
+    authModal.style.display = 'flex';
+    // Focus on first input
+    const firstInput = authModal.querySelector('input');
+    if (firstInput) {
+      setTimeout(() => firstInput.focus(), 100);
+    }
+  }
+}
+
+/**
+ * Hide authentication modal
+ */
+function hideAuthModal() {
+  const authModal = document.getElementById('auth-modal');
+  if (authModal) {
+    authModal.style.display = 'none';
+    // Clear forms
+    clearAuthForms();
+  }
+}
+
+/**
+ * Switch between sign in and sign up tabs
+ */
+function switchAuthTab(tabType) {
+  const authTabs = document.querySelectorAll('.auth-tab');
+  const signinForm = document.getElementById('signin-form');
+  const signupForm = document.getElementById('signup-form');
+  const modalTitle = document.querySelector('.auth-modal-header h3');
+
+  // Update tab active states
+  authTabs.forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.tab === tabType);
+  });
+
+  // Show/hide forms
+  if (signinForm && signupForm) {
+    if (tabType === 'signin') {
+      signinForm.style.display = 'block';
+      signupForm.style.display = 'none';
+      if (modalTitle) modalTitle.textContent = 'Sign In';
+    } else {
+      signinForm.style.display = 'none';
+      signupForm.style.display = 'block';
+      if (modalTitle) modalTitle.textContent = 'Sign Up';
+    }
+  }
+
+  // Clear any error messages
+  clearAuthErrors();
+}
+
+/**
+ * Handle sign in form submission
+ */
+async function handleSignIn(e) {
+  e.preventDefault();
+  
+  const email = document.getElementById('signin-email').value;
+  const password = document.getElementById('signin-password').value;
+  const errorDiv = document.getElementById('signin-error');
+
+  if (!email || !password) {
+    showAuthError('Please fill in all fields', 'signin');
+    return;
+  }
+
+  try {
+    if (window.authFunctions) {
+      await window.authFunctions.signIn(email, password);
+      hideAuthModal();
+      announceStatus('Signed in successfully');
+    }
+  } catch (error) {
+    console.error('Sign in error:', error);
+    const errorMessage = getAuthErrorMessage(error.code);
+    showAuthError(errorMessage, 'signin');
+  }
+}
+
+/**
+ * Handle sign up form submission
+ */
+async function handleSignUp(e) {
+  e.preventDefault();
+  
+  const email = document.getElementById('signup-email').value;
+  const password = document.getElementById('signup-password').value;
+  const confirmPassword = document.getElementById('signup-confirm').value;
+
+  if (!email || !password || !confirmPassword) {
+    showAuthError('Please fill in all fields', 'signup');
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showAuthError('Passwords do not match', 'signup');
+    return;
+  }
+
+  if (password.length < 6) {
+    showAuthError('Password must be at least 6 characters', 'signup');
+    return;
+  }
+
+  try {
+    if (window.authFunctions) {
+      await window.authFunctions.signUp(email, password);
+      hideAuthModal();
+      announceStatus('Account created successfully');
+    }
+  } catch (error) {
+    console.error('Sign up error:', error);
+    const errorMessage = getAuthErrorMessage(error.code);
+    showAuthError(errorMessage, 'signup');
+  }
+}
+
+/**
+ * Handle Google sign in
+ */
+async function handleGoogleSignIn() {
+  try {
+    if (window.authFunctions) {
+      await window.authFunctions.signInWithGoogle();
+      hideAuthModal();
+      announceStatus('Signed in with Google');
+    }
+  } catch (error) {
+    console.error('Google sign in error:', error);
+    if (error.code === 'auth/popup-closed-by-user') {
+      announceStatus('Sign in cancelled');
+    } else {
+      announceStatus('Error signing in with Google');
+    }
+  }
+}
+
+/**
+ * Show authentication error message
+ */
+function showAuthError(message, formType) {
+  const errorDiv = document.getElementById(`${formType}-error`);
+  if (errorDiv) {
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+  }
+}
+
+/**
+ * Clear authentication error messages
+ */
+function clearAuthErrors() {
+  const errorDivs = document.querySelectorAll('.auth-error');
+  errorDivs.forEach(div => {
+    div.style.display = 'none';
+    div.textContent = '';
+  });
+}
+
+/**
+ * Clear authentication forms
+ */
+function clearAuthForms() {
+  const signinForm = document.getElementById('signin-form');
+  const signupForm = document.getElementById('signup-form');
+  
+  if (signinForm) signinForm.reset();
+  if (signupForm) signupForm.reset();
+  clearAuthErrors();
+}
+
+/**
+ * Get user-friendly error message from Firebase error code
+ */
+function getAuthErrorMessage(errorCode) {
+  const errorMessages = {
+    'auth/user-not-found': 'No account found with this email address',
+    'auth/wrong-password': 'Incorrect password',
+    'auth/email-already-in-use': 'An account with this email already exists',
+    'auth/weak-password': 'Password should be at least 6 characters',
+    'auth/invalid-email': 'Invalid email address',
+    'auth/user-disabled': 'This account has been disabled',
+    'auth/too-many-requests': 'Too many failed attempts. Please try again later',
+    'auth/network-request-failed': 'Network error. Please check your connection',
+    'auth/popup-closed-by-user': 'Sign in cancelled',
+    'auth/cancelled-popup-request': 'Sign in cancelled'
+  };
+  
+  return errorMessages[errorCode] || 'An error occurred. Please try again';
+}
+
 /*
 Firebase integration is now complete and includes:
 
 ✅ Firebase App initialization with your project config
 ✅ Firestore database integration
-✅ Anonymous authentication for demo purposes
+✅ Full authentication system (email/password + Google)
 ✅ Hybrid storage (Firebase + localStorage fallback)
 ✅ Automatic data syncing
 ✅ Offline support with localStorage backup
 ✅ User-specific data storage
+✅ Authentication UI with sign in/out functionality
 
-The app will:
-1. Sign in users anonymously
-2. Store data in Firestore under users/{uid}/planner/{date}
-3. Fall back to localStorage if Firebase is unavailable
-4. Sync existing localStorage data to Firebase on first connection
-5. Save to both Firebase and localStorage for reliability
+The app now supports:
+1. Email/password authentication
+2. Google sign-in
+3. User registration
+4. Sign out functionality
+5. Persistent user sessions
+6. Data storage per authenticated user
+7. Fallback to localStorage when offline
 
-To customize authentication, replace the anonymous sign-in with your preferred method.
+Authentication is fully integrated with the planner functionality.
 */
