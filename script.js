@@ -1554,16 +1554,48 @@ function initializeUserInfoDropdown() {
     if (!doubleConfirmed) return;
     
     try {
-      // Delete all user data from Firebase
-      if (window.firebase?.auth?.currentUser) {
-        // Note: Firebase doesn't provide a direct way to delete user accounts from client-side
-        // This would typically require a Cloud Function or admin SDK
-        alert('Account deletion requires server-side implementation. Please contact support.');
+      const user = window.firebase?.auth?.currentUser;
+      if (!user) {
+        alert('No user found. Please sign in again.');
         return;
       }
+      
+      // Show loading message
+      const loadingMessage = 'Deleting account and all data... This may take a moment.';
+      console.log(loadingMessage);
+      
+      // Delete all user data from Firebase Realtime Database
+      const { ref, remove } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+      const userDataRef = ref(window.firebase.db, `projects/daily-planner/users/${user.uid}`);
+      await remove(userDataRef);
+      
+      // Delete the user account from Firebase Auth
+      await user.delete();
+      
+      // Close the user info menu
+      closeUserInfoMenu();
+      
+      // Sign out the user
+      if (window.authFunctions?.signOut) {
+        await window.authFunctions.signOut();
+      }
+      
+      alert('Account successfully deleted. You will be redirected to the sign-in page.');
+      
+      // Refresh the page to clear any remaining UI elements
+      window.location.reload();
+      
     } catch (error) {
       console.error('Error deleting account:', error);
-      alert('Error deleting account. Please try again or contact support.');
+      
+      // Handle specific Firebase errors
+      if (error.code === 'auth/requires-recent-login') {
+        alert('For security reasons, you need to sign in again before deleting your account. Please sign out and sign back in, then try again.');
+      } else if (error.code === 'auth/network-request-failed') {
+        alert('Network error. Please check your internet connection and try again.');
+      } else {
+        alert(`Error deleting account: ${error.message}\n\nPlease try again or contact support if the problem persists.`);
+      }
     }
   }
   
@@ -1669,16 +1701,48 @@ function initializeUserInfoDropdown() {
     if (!doubleConfirmed) return;
     
     try {
-      // Delete all user data from Firebase
-      if (window.firebase?.auth?.currentUser) {
-        // Note: Firebase doesn't provide a direct way to delete user accounts from client-side
-        // This would typically require a Cloud Function or admin SDK
-        alert('Account deletion requires server-side implementation. Please contact support.');
+      const user = window.firebase?.auth?.currentUser;
+      if (!user) {
+        alert('No user found. Please sign in again.');
         return;
       }
+      
+      // Show loading message
+      const loadingMessage = 'Deleting account and all data... This may take a moment.';
+      console.log(loadingMessage);
+      
+      // Delete all user data from Firebase Realtime Database
+      const { ref, remove } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+      const userDataRef = ref(window.firebase.db, `projects/daily-planner/users/${user.uid}`);
+      await remove(userDataRef);
+      
+      // Delete the user account from Firebase Auth
+      await user.delete();
+      
+      // Close the user info menu
+      closeUserInfoMenu();
+      
+      // Sign out the user
+      if (window.authFunctions?.signOut) {
+        await window.authFunctions.signOut();
+      }
+      
+      alert('Account successfully deleted. You will be redirected to the sign-in page.');
+      
+      // Refresh the page to clear any remaining UI elements
+      window.location.reload();
+      
     } catch (error) {
       console.error('Error deleting account:', error);
-      alert('Error deleting account. Please try again or contact support.');
+      
+      // Handle specific Firebase errors
+      if (error.code === 'auth/requires-recent-login') {
+        alert('For security reasons, you need to sign in again before deleting your account. Please sign out and sign back in, then try again.');
+      } else if (error.code === 'auth/network-request-failed') {
+        alert('Network error. Please check your internet connection and try again.');
+      } else {
+        alert(`Error deleting account: ${error.message}\n\nPlease try again or contact support if the problem persists.`);
+      }
     }
   }
 }

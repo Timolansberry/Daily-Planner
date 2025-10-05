@@ -1,9 +1,43 @@
 {
   "rules": {
-    "dailyPlanner": {
-      "$uid": {
-        ".read":  "auth != null && $uid === auth.uid",
-        ".write": "auth != null && $uid === auth.uid"
+    "projects": {
+      "$projectId": {
+        "users": {
+          "$userId": {
+            ".read": "auth != null && auth.uid == $userId",
+            ".write": "auth != null && auth.uid == $userId",
+            "planner": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            },
+            "habits": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            },
+            "expenses": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            },
+            "work": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            },
+            "pomodoro": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            }
+          }
+        }
       }
     }
   }
