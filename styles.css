@@ -117,6 +117,11 @@ body {
   border-color: var(--accent);
 }
 
+/* Mobile User Profile Icon - positioned on left side of header */
+.mobile-user-profile-icon {
+  display: none; /* Hidden by default, shown on mobile */
+}
+
 /* Hamburger / responsive nav for small screens */
 .nav-toggle {
   display: inline-flex;
@@ -149,6 +154,11 @@ body {
     justify-content: flex-start !important;
   }
   
+  /* Hide mobile user profile when nav is closed */
+  .mobile-user-profile {
+    display: none !important;
+  }
+  
   /* Show mobile slide-in panel when nav is open */
   .header.nav-open .app-nav,
   .nav-open .app-nav {
@@ -174,6 +184,18 @@ body {
     justify-content: flex-start !important;
   }
   
+  /* Ensure mobile user profile is visible when nav is open */
+  .header.nav-open .mobile-user-profile,
+  .nav-open .mobile-user-profile {
+    display: block !important;
+  }
+  
+  /* Show mobile user email when user is signed in and nav is open */
+  .header.nav-open .mobile-user-email,
+  .nav-open .mobile-user-email {
+    display: block !important;
+  }
+  
   /* Position nav controls at bottom of mobile nav */
   .header.nav-open .nav-controls,
   .nav-open .nav-controls {
@@ -187,6 +209,15 @@ body {
     align-items: center;
     justify-content: center;
     /* keep toggle above the nav panel so it remains clickable */
+    z-index: 1300;
+  }
+  
+  /* Show and position mobile user profile icon on left side */
+  .mobile-user-profile-icon {
+    display: block;
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
     z-index: 1300;
   }
 
@@ -278,6 +309,16 @@ body {
     min-height: 44px;
     justify-content: center;
     border-radius: var(--radius-md);
+  }
+  
+  /* Hide mobile user profile on desktop */
+  .mobile-user-profile {
+    display: none !important;
+  }
+  
+  /* Hide mobile user profile icon on desktop */
+  .mobile-user-profile-icon {
+    display: none !important;
   }
 }
 
@@ -679,6 +720,7 @@ body {
 /* ensure header has extra right padding so absolute nav-toggle won't overlap centered title */
 .header {
   padding-right: 3.5rem;
+  padding-left: 3.5rem; /* Add left padding for mobile user profile icon */
 }
 
 /* Desktop / fullscreen layout: place nav to the right and hide hamburger */
@@ -2310,6 +2352,59 @@ body {
     flex-direction: column;
     gap: var(--space-2);
     align-items: flex-end;
+  }
+  
+  /* Reorder elements in mobile nav: user icon first, then theme toggle */
+  .theme-toggle-btn {
+    order: 2;
+  }
+  
+  .auth-section {
+    order: 1;
+  }
+  
+  /* Mobile User Profile Section */
+  .mobile-user-profile {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-user-email {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--accent);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
+  }
+  
+  .mobile-user-email:hover {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+    transform: scale(1.02);
+  }
+  
+  .mobile-user-email svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* Hide desktop user profile on mobile */
+  .auth-section .user-email {
+    display: none !important;
   }
   
   .auth-section {

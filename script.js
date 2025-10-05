@@ -1365,6 +1365,7 @@ window.initWithFirebase = async function(userId) {
  */
 function initializeUserInfoDropdown() {
   const userEmail = document.getElementById('user-email');
+  const mobileUserEmail = document.getElementById('mobile-user-email');
   const userInfoDropdown = document.getElementById('user-info-dropdown');
   const saveUserInfoBtn = document.getElementById('save-user-info-btn');
   const dropdownLogoutBtn = document.getElementById('dropdown-logout-btn');
@@ -1374,15 +1375,23 @@ function initializeUserInfoDropdown() {
   
   let isDropdownOpen = false;
   
-  // Toggle dropdown when clicking on email
+  // Toggle dropdown when clicking on email (desktop)
   userEmail.addEventListener('click', (e) => {
     e.stopPropagation();
     toggleDropdown();
   });
   
+  // Toggle dropdown when clicking on mobile user email
+  if (mobileUserEmail) {
+    mobileUserEmail.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleDropdown();
+    });
+  }
+  
   // Close dropdown when clicking outside
   document.addEventListener('click', (e) => {
-    if (!userInfoDropdown.contains(e.target) && !userEmail.contains(e.target)) {
+    if (!userInfoDropdown.contains(e.target) && !userEmail.contains(e.target) && !(mobileUserEmail && mobileUserEmail.contains(e.target))) {
       closeDropdown();
     }
   });

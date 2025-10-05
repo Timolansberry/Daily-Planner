@@ -17,6 +17,11 @@
 </head>
 <body>
         <header class="header">
+            <!-- Mobile User Profile Icon - Left side next to hamburger -->
+            <div class="mobile-user-profile-icon">
+                <div id="mobile-user-email" class="mobile-user-email" style="display: none;"></div>
+            </div>
+            
             <h1 class="title">DAILY PLAN</h1>
             <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation"></button>
             <nav class="app-nav" aria-label="App navigation">
@@ -344,9 +349,10 @@
             const signInBtn = document.getElementById('sign-in-btn');
             const signOutBtn = document.getElementById('sign-out-btn');
             const userEmail = document.getElementById('user-email');
+            const mobileUserEmail = document.getElementById('mobile-user-email');
             const authModal = document.getElementById('auth-modal');
 
-            console.log('Auth elements found:', { signInBtn, signOutBtn, userEmail, authModal });
+            console.log('Auth elements found:', { signInBtn, signOutBtn, userEmail, mobileUserEmail, authModal });
 
             if (user) {
                 // User is signed in
@@ -358,6 +364,11 @@
                     userEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
                     userEmail.style.display = 'block';
                 }
+                if (mobileUserEmail) {
+                    // Show person icon in mobile nav
+                    mobileUserEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                    mobileUserEmail.style.display = 'block';
+                }
                 if (authModal) authModal.style.display = 'none';
             } else {
                 // User is not signed in
@@ -367,6 +378,10 @@
                 if (userEmail) {
                     userEmail.textContent = '';
                     userEmail.style.display = 'none';
+                }
+                if (mobileUserEmail) {
+                    mobileUserEmail.innerHTML = '';
+                    mobileUserEmail.style.display = 'none';
                 }
             }
             }
@@ -444,6 +459,7 @@
             const signInBtn = document.getElementById('sign-in-btn');
             const signOutBtn = document.getElementById('sign-out-btn');
             const userEmail = document.getElementById('user-email');
+            const mobileUserEmail = document.getElementById('mobile-user-email');
             
             // Check if user is actually signed in by checking Firebase auth state
             if (auth.currentUser) {
@@ -455,11 +471,17 @@
                     userEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
                     userEmail.style.display = 'block';
                 }
+                if (mobileUserEmail) {
+                    // Show person icon in mobile nav
+                    mobileUserEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                    mobileUserEmail.style.display = 'block';
+                }
             } else {
                 console.log('Fallback: No user signed in, showing sign-in button');
                 if (signInBtn) signInBtn.style.display = 'block';
                 if (signOutBtn) signOutBtn.style.display = 'none';
                 if (userEmail) userEmail.style.display = 'none';
+                if (mobileUserEmail) mobileUserEmail.style.display = 'none';
             }
         }, 1000);
     </script>
