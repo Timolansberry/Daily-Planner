@@ -22,6 +22,44 @@
                 <div id="mobile-user-email" class="mobile-user-email" style="display: none;"></div>
             </div>
             
+            <!-- User Info Menu - Slides from left -->
+            <div id="user-info-menu" class="user-info-menu" style="display: none;">
+                <div class="user-info-menu-header">
+                    <h3>Account Information</h3>
+                    <button type="button" id="user-info-close-btn" class="user-info-close-btn" aria-label="Close user info">×</button>
+                </div>
+                <div class="user-info-menu-content">
+                    <div class="info-row">
+                        <label>Email:</label>
+                        <span id="menu-email">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Display Name:</label>
+                        <input type="text" id="menu-display-name" class="menu-input" placeholder="Enter name">
+                    </div>
+                    <div class="info-row">
+                        <label>Account Created:</label>
+                        <span id="menu-created">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Last Login:</label>
+                        <span id="menu-last-login">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Provider:</label>
+                        <span id="menu-provider">Loading...</span>
+                    </div>
+                </div>
+                <div class="user-info-menu-actions">
+                    <button type="button" id="menu-save-btn" class="menu-save-btn">Save Changes</button>
+                    <button type="button" id="menu-logout-btn" class="menu-logout-btn">Log Out</button>
+                    <button type="button" id="menu-delete-btn" class="menu-delete-btn">Delete Account</button>
+                </div>
+            </div>
+            
+            <!-- User Info Menu Backdrop -->
+            <div id="user-info-menu-backdrop" class="user-info-menu-backdrop"></div>
+            
             <h1 class="title">DAILY PLAN</h1>
             <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation"></button>
             <nav class="app-nav" aria-label="App navigation">

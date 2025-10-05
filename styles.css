@@ -220,6 +220,15 @@ body {
     left: 0.6rem;
     z-index: 1300;
   }
+  
+  /* Show user info menu on mobile */
+  .user-info-menu {
+    display: flex !important;
+  }
+  
+  .user-info-menu-backdrop {
+    display: block !important;
+  }
 
   /* Make the hamburger clearly visible on small screens */
   .nav-toggle {
@@ -318,6 +327,12 @@ body {
   
   /* Hide mobile user profile icon on desktop */
   .mobile-user-profile-icon {
+    display: none !important;
+  }
+  
+  /* Hide user info menu on desktop */
+  .user-info-menu,
+  .user-info-menu-backdrop {
     display: none !important;
   }
 }
@@ -2400,6 +2415,177 @@ body {
   .mobile-user-email svg {
     width: 20px;
     height: 20px;
+  }
+  
+  /* User Info Menu - Slides from left */
+  .user-info-menu {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    height: 100vh;
+    width: min(320px, 80%);
+    background: var(--surface);
+    box-shadow: 12px 0 32px rgba(0,0,0,0.5);
+    z-index: 1300;
+    transition: left 240ms ease-in-out;
+    display: flex;
+    flex-direction: column;
+    padding: 4.5rem 1.25rem 1.25rem 1.25rem;
+    transform: translateX(0);
+  }
+  
+  .user-info-menu.open {
+    left: 0;
+  }
+  
+  .user-info-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .user-info-menu-header h3 {
+    color: var(--text);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .user-info-close-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+  
+  .user-info-close-btn:hover {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  .user-info-menu-content {
+    flex: 1;
+    margin-bottom: 2rem;
+  }
+  
+  .user-info-menu-content .info-row {
+    margin-bottom: 1.5rem;
+  }
+  
+  .user-info-menu-content .info-row label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  
+  .user-info-menu-content .info-row span {
+    color: var(--text);
+    font-weight: 500;
+  }
+  
+  .menu-input {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+  
+  .menu-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 179, 255, 0.1);
+  }
+  
+  .user-info-menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .menu-save-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .menu-save-btn:hover {
+    background: #0099cc;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 179, 255, 0.3);
+  }
+  
+  .menu-logout-btn {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .menu-logout-btn:hover {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  .menu-delete-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .menu-delete-btn:hover {
+    background: #b91c1c;
+  }
+  
+  /* User Info Menu Backdrop */
+  .user-info-menu-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1200;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.28s ease;
+  }
+  
+  .user-info-menu-backdrop.show {
+    opacity: 1;
+    visibility: visible;
   }
   
   /* Hide desktop user profile on mobile */

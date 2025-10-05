@@ -1371,7 +1371,24 @@ function initializeUserInfoDropdown() {
   const dropdownLogoutBtn = document.getElementById('dropdown-logout-btn');
   const deleteAccountBtn = document.getElementById('delete-account-btn');
   
+  // Mobile user info menu elements
+  const userInfoMenu = document.getElementById('user-info-menu');
+  const userInfoMenuBackdrop = document.getElementById('user-info-menu-backdrop');
+  const userInfoCloseBtn = document.getElementById('user-info-close-btn');
+  const menuSaveBtn = document.getElementById('menu-save-btn');
+  const menuLogoutBtn = document.getElementById('menu-logout-btn');
+  const menuDeleteBtn = document.getElementById('menu-delete-btn');
+  
   if (!userEmail || !userInfoDropdown) return;
+  
+  // Debug: Check if mobile user info menu elements exist
+  console.log('User info dropdown elements:', {
+    userEmail: !!userEmail,
+    userInfoDropdown: !!userInfoDropdown,
+    mobileUserEmail: !!mobileUserEmail,
+    userInfoMenu: !!userInfoMenu,
+    userInfoMenuBackdrop: !!userInfoMenuBackdrop
+  });
   
   let isDropdownOpen = false;
   
@@ -1381,11 +1398,11 @@ function initializeUserInfoDropdown() {
     toggleDropdown();
   });
   
-  // Toggle dropdown when clicking on mobile user email
-  if (mobileUserEmail) {
+  // Open user info menu when clicking on mobile user email
+  if (mobileUserEmail && userInfoMenu) {
     mobileUserEmail.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleDropdown();
+      openUserInfoMenu();
     });
   }
   
@@ -1416,6 +1433,44 @@ function initializeUserInfoDropdown() {
       await deleteUserAccount();
     });
   }
+  
+  // User info menu event handlers
+  if (userInfoCloseBtn) {
+    userInfoCloseBtn.addEventListener('click', () => {
+      closeUserInfoMenu();
+    });
+  }
+  
+  if (userInfoMenuBackdrop) {
+    userInfoMenuBackdrop.addEventListener('click', () => {
+      closeUserInfoMenu();
+    });
+  }
+  
+  if (menuSaveBtn) {
+    menuSaveBtn.addEventListener('click', async () => {
+      await saveUserInfoFromMenu();
+    });
+  }
+  
+  if (menuLogoutBtn) {
+    menuLogoutBtn.addEventListener('click', async () => {
+      await logoutUserFromMenu();
+    });
+  }
+  
+  if (menuDeleteBtn) {
+    menuDeleteBtn.addEventListener('click', async () => {
+      await deleteUserAccountFromMenu();
+    });
+  }
+  
+  // Close user info menu on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && userInfoMenu && userInfoMenu.classList.contains('open')) {
+      closeUserInfoMenu();
+    }
+  });
   
   function toggleDropdown() {
     if (isDropdownOpen) {
@@ -1535,6 +1590,114 @@ function initializeUserInfoDropdown() {
       'unknown': 'Unknown'
     };
     return providers[provider] || provider;
+  }
+  
+  // User Info Menu Functions
+  function openUserInfoMenu() {
+    console.log('Opening user info menu...', { userInfoMenu, userInfoMenuBackdrop });
+    if (userInfoMenu && userInfoMenuBackdrop) {
+      console.log('Adding open class to menu and show class to backdrop');
+      userInfoMenu.classList.add('open');
+      userInfoMenuBackdrop.classList.add('show');
+      loadUserInfoToMenu();
+    } else {
+      console.error('User info menu elements not found:', { userInfoMenu, userInfoMenuBackdrop });
+    }
+  }
+  
+  function closeUserInfoMenu() {
+    console.log('Closing user info menu...');
+    if (userInfoMenu && userInfoMenuBackdrop) {
+      console.log('Removing open class from menu and show class from backdrop');
+      userInfoMenu.classList.remove('open');
+      userInfoMenuBackdrop.classList.remove('show');
+    }
+  }
+  
+  async function loadUserInfoToMenu() {
+    try {
+      const userInfo = await storage.getUserInfo();
+      if (userInfo) {
+        document.getElementById('menu-email').textContent = userInfo.email || 'N/A';
+        document.getElementById('menu-display-name').value = userInfo.displayName || '';
+        document.getElementById('menu-created').textContent = formatDateDisplay(userInfo.createdAt);
+        document.getElementById('menu-last-login').textContent = formatDateDisplay(userInfo.lastLoginAt);
+        document.getElementById('menu-provider').textContent = formatProvider(userInfo.provider);
+      }
+    } catch (error) {
+      console.error('Error loading user info to menu:', error);
+    }
+  }
+  
+  async function saveUserInfoFromMenu() {
+    try {
+      const userInfo = await storage.getUserInfo();
+      if (!userInfo) return;
+      
+      const displayName = document.getElementById('menu-display-name').value.trim();
+      if (displayName && displayName !== userInfo.displayName) {
+        userInfo.displayName = displayName;
+        await storage.updateUserInfo(userInfo);
+        
+        // Update Firebase Auth profile
+        if (window.firebase?.auth?.currentUser) {
+          const { updateProfile } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+          await updateProfile(window.firebase.auth.currentUser, {
+            displayName: displayName
+          });
+        }
+        
+        console.log('✅ Profile updated successfully');
+        alert('Profile updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error saving user info:', error);
+      alert('Error saving profile. Please try again.');
+    }
+  }
+  
+  async function logoutUserFromMenu() {
+    try {
+      if (window.authFunctions?.signOut) {
+        await window.authFunctions.signOut();
+        closeUserInfoMenu();
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  }
+  
+  async function deleteUserAccountFromMenu() {
+    const confirmed = confirm(
+      'Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.'
+    );
+    
+    if (!confirmed) return;
+    
+    const doubleConfirmed = confirm(
+      'This will permanently delete ALL your data including:\n' +
+      '• All planner entries\n' +
+      '• All habits and tracking data\n' +
+      '• All expense records\n' +
+      '• All work tasks and duties\n' +
+      '• All account information\n\n' +
+      'Are you absolutely sure?'
+    );
+    
+    if (!doubleConfirmed) return;
+    
+    try {
+      // Delete all user data from Firebase
+      if (window.firebase?.auth?.currentUser) {
+        // Note: Firebase doesn't provide a direct way to delete user accounts from client-side
+        // This would typically require a Cloud Function or admin SDK
+        alert('Account deletion requires server-side implementation. Please contact support.');
+        return;
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Error deleting account. Please try again or contact support.');
+    }
   }
 }
 
