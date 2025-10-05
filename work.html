@@ -84,8 +84,6 @@
           <h3 style="color:var(--accent);margin-bottom:12px;font-size:1.1rem;">Future Due Tasks</h3>
           <ul id="future-due-tasks" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px"></ul>
         </div>
-        
-        <div style="margin-top:12px;text-align:right;"><button onclick="location.href='index.html'" class="add-btn">Back</button></div>
       </section>
     </main>
   </div>
@@ -111,7 +109,7 @@
         li.style.alignItems='center'; 
         const isCompleted = t.completed || false;
         const textStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : '';
-        li.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${i}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><span class="task-text" style="${textStyle}">${escapeHtml(t.text)}</span></div><div><button data-del="${i}" class="todo-delete" title="Delete task">🗑️</button></div>`; 
+        li.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${i}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><span class="task-text" style="${textStyle}">${convertUrlsToLinks(t.text)}</span></div><div><button data-del="${i}" class="todo-delete" title="Delete task">🗑️</button></div>`; 
         ul.appendChild(li); 
       }); 
       
@@ -200,7 +198,7 @@
         const isCompleted = task.completed || false;
         const textStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : '';
         const statusStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : 'font-size:12px;color:var(--muted)';
-        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${escapeHtml(task.text)}</strong><div style="${statusStyle}">${statusText} - ${task.dueDate}</div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
+        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${convertUrlsToLinks(task.text)}</strong><div style="${statusStyle}">${statusText} - ${task.dueDate}</div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
         immediateUl.appendChild(li);
       });
       
@@ -222,14 +220,37 @@
         const isCompleted = task.completed || false;
         const textStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : '';
         const statusStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : 'font-size:12px;color:var(--muted)';
-        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${escapeHtml(task.text)}</strong><div style="${statusStyle}">Due: ${task.dueDate}</div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
+        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${convertUrlsToLinks(task.text)}</strong><div style="${statusStyle}">Due: ${task.dueDate}</div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
         futureUl.appendChild(li);
       });
     }
 
     function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+    
+    // Function to convert URLs to clickable links
+    function convertUrlsToLinks(text) {
+      if (!text) return '';
+      
+      // URL regex pattern - matches http/https URLs and common domain patterns
+      const urlRegex = /(https?:\/\/[^\s]+|(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/gi;
+      
+      return text.replace(urlRegex, (url) => {
+        // Ensure URL has protocol
+        let href = url;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          href = 'https://' + url;
+        }
+        
+        // Escape the URL for HTML
+        const escapedUrl = escapeHtml(url);
+        const escapedHref = escapeHtml(href);
+        
+        return `<a href="${escapedHref}" target="_blank" rel="noopener noreferrer nofollow" style="color: var(--accent); text-decoration: underline;">${escapedUrl}</a>`;
+      });
+    }
 
-    document.getElementById('add-work-task').addEventListener('click', ()=>{ 
+    // Function to add a new task
+    function addNewTask() {
       const t=input.value.trim(); 
       if(!t) return; 
       const dueDateInput = document.getElementById('due-date-input');
@@ -239,9 +260,27 @@
       arr.push({text:t, seconds:0, dueDate: dueDate || ''}); 
       save(arr); 
       input.value=''; 
-      dueDateInput.value='';
+      // Reset date picker to today's date instead of clearing it
+      dueDateInput.value = formatDate(new Date());
       render(); 
       renderDueSections();
+    }
+
+    // Add click event for the add button
+    document.getElementById('add-work-task').addEventListener('click', addNewTask);
+
+    // Add keyboard shortcuts for the task input
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (e.shiftKey) {
+          // Shift+Enter: Allow default behavior (new line)
+          return;
+        } else {
+          // Enter: Add the task
+          e.preventDefault();
+          addNewTask();
+        }
+      }
     });
     // Event delegation for main tasks list
     ul.addEventListener('click',(e)=>{ 
