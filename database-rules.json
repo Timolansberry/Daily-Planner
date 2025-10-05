@@ -1,0 +1,42 @@
+{
+  "rules": {
+    "projects": {
+      "$projectId": {
+        "users": {
+          "$userId": {
+            "planner": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            },
+            "habits": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            },
+            "expenses": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            },
+            "work": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            },
+            "pomodoro": {
+              "$date": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

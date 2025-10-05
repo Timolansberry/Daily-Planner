@@ -244,7 +244,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { 
             getAuth, 
             signInWithEmailAndPassword, 
@@ -273,39 +273,39 @@
                 console.log('   3. Refresh the page');
                 
                 // Initialize app without Firebase
-                if (window.plannerApp) {
-                    window.plannerApp.initWithFirebase();
+                if (window.initWithFirebase) {
+                    window.initWithFirebase('anonymous');
                 }
                 return;
             }
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const googleProvider = new GoogleAuthProvider();
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+            const auth = getAuth(app);
+            const googleProvider = new GoogleAuthProvider();
 
-        // Make Firebase available globally
-        window.firebase = { app, db, auth, googleProvider };
-        
-        // Authentication state change handler
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log('User signed in:', user.uid, user.email);
-                updateAuthUI(user);
-                
+            // Make Firebase available globally
+            window.firebase = { app, db, auth, googleProvider };
+            
+            // Authentication state change handler
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log('User signed in:', user.uid, user.email);
+                    updateAuthUI(user);
+                    
                 // Initialize the app once user is authenticated
-                if (window.plannerApp) {
-                    window.plannerApp.initWithFirebase();
+                if (window.initWithFirebase) {
+                    window.initWithFirebase(user.uid);
                 }
-            } else {
-                console.log('No user signed in');
-                updateAuthUI(null);
-            }
-        });
+                } else {
+                    console.log('No user signed in');
+                    updateAuthUI(null);
+                }
+            });
 
-        // Authentication UI management
-        function updateAuthUI(user) {
+            // Authentication UI management
+            function updateAuthUI(user) {
             console.log('updateAuthUI called with user:', user);
             const signInBtn = document.getElementById('sign-in-btn');
             const signOutBtn = document.getElementById('sign-out-btn');
@@ -334,53 +334,72 @@
                     userEmail.style.display = 'none';
                 }
             }
-        }
+            }
 
-        // Authentication functions
-        window.authFunctions = {
+            // Authentication functions
+            window.authFunctions = {
             async signIn(email, password) {
                 try {
+                    console.log('Attempting to sign in with email:', email);
                     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                    console.log('Signed in:', userCredential.user);
+                    console.log('✅ Sign in successful:', userCredential.user);
+                    console.log('User ID:', userCredential.user.uid);
+                    console.log('User email:', userCredential.user.email);
                     return userCredential;
                 } catch (error) {
-                    console.error('Sign in error:', error);
+                    console.error('❌ Sign in error:', error);
+                    console.error('Error code:', error.code);
+                    console.error('Error message:', error.message);
                     throw error;
                 }
             },
 
             async signUp(email, password) {
                 try {
+                    console.log('Attempting to create account with email:', email);
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    console.log('Signed up:', userCredential.user);
+                    console.log('✅ Account created successfully:', userCredential.user);
+                    console.log('User ID:', userCredential.user.uid);
+                    console.log('User email:', userCredential.user.email);
                     return userCredential;
                 } catch (error) {
-                    console.error('Sign up error:', error);
+                    console.error('❌ Sign up error:', error);
+                    console.error('Error code:', error.code);
+                    console.error('Error message:', error.message);
                     throw error;
                 }
             },
 
             async signInWithGoogle() {
                 try {
+                    console.log('Attempting Google sign in...');
                     const result = await signInWithPopup(auth, googleProvider);
-                    console.log('Google sign in:', result.user);
+                    console.log('✅ Google sign in successful:', result.user);
+                    console.log('User ID:', result.user.uid);
+                    console.log('User email:', result.user.email);
                     return result;
                 } catch (error) {
-                    console.error('Google sign in error:', error);
+                    console.error('❌ Google sign in error:', error);
+                    console.error('Error code:', error.code);
+                    console.error('Error message:', error.message);
                     throw error;
                 }
             },
 
             async signOut() {
                 try {
+                    console.log('Attempting to sign out...');
                     await signOut(auth);
-                    console.log('Signed out');
+                    console.log('✅ Signed out successfully');
                 } catch (error) {
-                    console.error('Sign out error:', error);
+                    console.error('❌ Sign out error:', error);
+                    console.error('Error code:', error.code);
+                    console.error('Error message:', error.message);
                     throw error;
                 }
             }
-        };
+            };
+        }
         
         // Call the initialization function
         initializeFirebase();

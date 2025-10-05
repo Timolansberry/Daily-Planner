@@ -21,6 +21,22 @@ function generateId() {
 }
 
 /**
+ * Get current page name from URL
+ */
+function getCurrentPage() {
+  const path = window.location.pathname;
+  const filename = path.split('/').pop() || 'index.html';
+  
+  if (filename === 'index.html' || filename === '') return 'planner';
+  if (filename === 'habit-builder.html') return 'habits';
+  if (filename === 'expense-tracker.html') return 'expenses';
+  if (filename === 'work.html') return 'work';
+  if (filename === 'pomodoro.html') return 'pomodoro';
+  
+  return 'planner'; // default
+}
+
+/**
  * Format date to YYYY-MM-DD string using local timezone
  */
 function formatDate(date) {
@@ -80,79 +96,85 @@ function escapeHtml(str) {
 // ============================================================================
 
 /**
- * Storage adapter - uses Firebase Firestore with localStorage fallback
+ * Storage adapter - uses Firebase Realtime Database with localStorage fallback
  */
 const storage = {
   _firebaseReady: false,
   _userId: null,
+  _projectId: 'daily-planner', // Default project ID
 
   /**
    * Initialize Firebase storage
    */
-  initFirebase(userId) {
+  initFirebase(userId, projectId = 'daily-planner') {
     this._firebaseReady = true;
     this._userId = userId;
-    console.log('Firebase storage initialized for user:', userId);
+    this._projectId = projectId;
+    console.log('Firebase storage initialized for user:', userId, 'in project:', projectId);
   },
 
   /**
-   * Get planner data for a specific date
+   * Get data for a specific date and page
    * @param {string} dateStr - Date in YYYY-MM-DD format
-   * @returns {Promise<Object>} Planner data
+   * @param {string} page - Page name (planner, habits, expenses, work, pomodoro)
+   * @returns {Promise<Object>} Page data
    */
-  async get(dateStr) {
+  async get(dateStr, page = 'planner') {
     try {
       // Try Firebase first if available
       if (this._firebaseReady && this._userId && window.firebase) {
-        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-        const plannerDoc = doc(window.firebase.db, 'users', this._userId, 'planner', dateStr);
-        const docSnap = await getDoc(plannerDoc);
+        const { ref, get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        const dataRef = ref(window.firebase.db, `projects/${this._projectId}/users/${this._userId}/${page}/${dateStr}`);
+        const snapshot = await get(dataRef);
         
-        if (docSnap.exists()) {
-          console.log('Loaded from Firebase:', dateStr);
-          return docSnap.data();
+        if (snapshot.exists()) {
+          console.log(`Loaded ${page} from Firebase:`, dateStr);
+          return snapshot.val();
         }
       }
       
       // Fallback to localStorage
-      const data = localStorage.getItem(`planner:${dateStr}`);
+      const data = localStorage.getItem(`${page}:${dateStr}`);
       if (data) {
-        console.log('Loaded from localStorage:', dateStr);
+        console.log(`Loaded ${page} from localStorage:`, dateStr);
         return JSON.parse(data);
       }
       
       return null;
     } catch (error) {
-      console.error('Error loading planner data:', error);
+      console.error(`Error loading ${page} data:`, error);
       // Fallback to localStorage on error
-      const data = localStorage.getItem(`planner:${dateStr}`);
+      const data = localStorage.getItem(`${page}:${dateStr}`);
       return data ? JSON.parse(data) : null;
     }
   },
 
   /**
-   * Save planner data for a specific date
+   * Save data for a specific date and page
    * @param {string} dateStr - Date in YYYY-MM-DD format
-   * @param {Object} data - Planner data to save
+   * @param {Object} data - Page data to save
+   * @param {string} page - Page name (planner, habits, expenses, work, pomodoro)
    */
-  async set(dateStr, data) {
+  async set(dateStr, data, page = 'planner') {
     try {
       // Save to localStorage immediately for offline support
-      localStorage.setItem(`planner:${dateStr}`, JSON.stringify(data));
+      localStorage.setItem(`${page}:${dateStr}`, JSON.stringify(data));
       
       // Try Firebase if available
       if (this._firebaseReady && this._userId && window.firebase) {
-        const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-        const plannerDoc = doc(window.firebase.db, 'users', this._userId, 'planner', dateStr);
-        await setDoc(plannerDoc, {
+        const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        const dataRef = ref(window.firebase.db, `projects/${this._projectId}/users/${this._userId}/${page}/${dateStr}`);
+        await set(dataRef, {
           ...data,
           lastUpdated: new Date().toISOString(),
-          userId: this._userId
+          userId: this._userId,
+          projectId: this._projectId,
+          page: page
         });
-        console.log('Saved to Firebase:', dateStr);
+        console.log(`Saved ${page} to Firebase:`, dateStr);
       }
     } catch (error) {
-      console.error('Error saving planner data:', error);
+      console.error(`Error saving ${page} data:`, error);
       // localStorage backup already saved above
     }
   },
@@ -164,25 +186,33 @@ const storage = {
     if (!this._firebaseReady || !this._userId) return;
     
     try {
-      const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+      const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
       
-      // Get all localStorage keys
-      const keys = Object.keys(localStorage).filter(key => key.startsWith('planner:'));
+      // Get all localStorage keys for all pages
+      const pages = ['planner', 'habits', 'expenses', 'work', 'pomodoro'];
+      let totalSynced = 0;
       
-      for (const key of keys) {
-        const dateStr = key.replace('planner:', '');
-        const data = JSON.parse(localStorage.getItem(key));
+      for (const page of pages) {
+        const keys = Object.keys(localStorage).filter(key => key.startsWith(`${page}:`));
         
-        const plannerDoc = doc(window.firebase.db, 'users', this._userId, 'planner', dateStr);
-        await setDoc(plannerDoc, {
-          ...data,
-          lastUpdated: new Date().toISOString(),
-          userId: this._userId,
-          synced: true
-        });
+        for (const key of keys) {
+          const dateStr = key.replace(`${page}:`, '');
+          const data = JSON.parse(localStorage.getItem(key));
+          
+          const dataRef = ref(window.firebase.db, `projects/${this._projectId}/users/${this._userId}/${page}/${dateStr}`);
+          await set(dataRef, {
+            ...data,
+            lastUpdated: new Date().toISOString(),
+            userId: this._userId,
+            projectId: this._projectId,
+            page: page,
+            synced: true
+          });
+          totalSynced++;
+        }
       }
       
-      console.log('Synced', keys.length, 'plans to Firebase');
+      console.log('Synced', totalSynced, 'items to Firebase');
     } catch (error) {
       console.error('Error syncing to Firebase:', error);
     }
@@ -237,7 +267,7 @@ class PlannerManager {
    */
   async loadPlan(dateStr) {
     try {
-      const data = await storage.get(dateStr);
+      const data = await storage.get(dateStr, 'planner');
       currentPlan = data || getEmptyPlan();
 
       // Normalize older/newer data shapes: ensure `habits` is an array
@@ -260,7 +290,7 @@ class PlannerManager {
    */
   async savePlan() {
     const dateStr = formatDate(currentDate);
-    await storage.set(dateStr, currentPlan);
+    await storage.set(dateStr, currentPlan, 'planner');
     console.log(`Plan saved for ${dateStr}`);
   }
 
@@ -1210,7 +1240,7 @@ window.initWithFirebase = async function(userId) {
     console.log('Initializing Firebase integration for user:', userId);
     
     // Initialize storage with Firebase
-    storage.initFirebase(userId);
+    storage.initFirebase(userId, 'daily-planner');
     
     // Sync existing localStorage data to Firebase
     await storage.syncToFirebase();
