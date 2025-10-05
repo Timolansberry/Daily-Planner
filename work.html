@@ -66,11 +66,25 @@
     <main class="main-content">
       <section class="section">
         <h2 class="section-title">Tasks</h2>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input id="work-task-input" placeholder="New task" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input id="work-task-input" placeholder="New task" style="flex:1;min-width:200px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+          <input type="date" id="due-date-input" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);min-width:140px;">
           <button id="add-work-task" class="add-btn">+</button>
         </div>
         <ul id="work-tasks" style="list-style:none;margin-top:12px;padding:0;display:flex;flex-direction:column;gap:8px"></ul>
+        
+        <!-- Immediate Due Tasks Section -->
+        <div style="margin-top:24px;">
+          <h3 style="color:var(--accent);margin-bottom:12px;font-size:1.1rem;">Due Soon (Past, Today, Tomorrow)</h3>
+          <ul id="immediate-due-tasks" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px"></ul>
+        </div>
+        
+        <!-- Future Due Tasks Section -->
+        <div style="margin-top:24px;">
+          <h3 style="color:var(--accent);margin-bottom:12px;font-size:1.1rem;">Future Due Tasks</h3>
+          <ul id="future-due-tasks" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px"></ul>
+        </div>
+        
         <div style="margin-top:12px;text-align:right;"><button onclick="location.href='index.html'" class="add-btn">Back</button></div>
       </section>
     </main>
@@ -82,29 +96,201 @@
     function save(a){ localStorage.setItem(TASK_KEY, JSON.stringify(a)); }
     const ul = document.getElementById('work-tasks'); const input = document.getElementById('work-task-input');
 
-    function render(){ const arr=load(); ul.innerHTML=''; arr.forEach((t,i)=>{ const li=document.createElement('li'); li.style.display='flex'; li.style.justifyContent='space-between'; li.style.alignItems='center'; li.innerHTML=`<div><strong>${escapeHtml(t.text)}</strong><div style="font-size:12px;color:var(--muted)">Time spent: ${t.seconds||0}s</div></div><div style="display:flex;gap:8px"><button data-i="${i}" class="add-btn">▶</button><button data-stop="${i}" class="clear-all-btn">⏸</button><button data-del="${i}" class="todo-delete">×</button></div>`; ul.appendChild(li); }); }
+    function render(){ 
+      const arr=load(); 
+      ul.innerHTML=''; 
+      
+      // Only show tasks without due dates in the main list
+      arr.forEach((t,i)=>{ 
+        if (t.dueDate) return; // Skip tasks with due dates
+        
+        const li=document.createElement('li'); 
+        li.className = 'todo-item';
+        li.style.display='flex'; 
+        li.style.justifyContent='space-between'; 
+        li.style.alignItems='center'; 
+        const isCompleted = t.completed || false;
+        const textStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : '';
+        li.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${i}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><span class="task-text" style="${textStyle}">${escapeHtml(t.text)}</span></div><div><button data-del="${i}" class="todo-delete" title="Delete task">🗑️</button></div>`; 
+        ul.appendChild(li); 
+      }); 
+      
+      // Note: renderDueSections() is called separately to avoid conflicts
+    }
+    
+    function renderDueSections() {
+      // Use local timezone for date calculations
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const todayStr = formatDate(today);
+      const tomorrowStr = formatDate(tomorrow);
+      
+      // Get all tasks with due dates
+      const allTasks = load();
+      
+      // Separate tasks into immediate and future
+      const immediateTasks = [];
+      const futureTasks = [];
+      
+      allTasks.forEach((task, index) => {
+        if (!task.dueDate) return; // Skip tasks without due dates
+        
+        const dueDate = new Date(task.dueDate);
+        const dueDateStr = formatDate(dueDate);
+        
+        // Categorize tasks
+        if (dueDateStr <= tomorrowStr) {
+          // Past, today, or tomorrow
+          immediateTasks.push({...task, originalIndex: index});
+        } else {
+          // Future tasks (beyond tomorrow)
+          futureTasks.push({...task, originalIndex: index});
+        }
+      });
+      
+      // Sort immediate tasks by due date (past due first, then today, then tomorrow)
+      immediateTasks.sort((a, b) => {
+        const dateA = new Date(a.dueDate);
+        const dateB = new Date(b.dueDate);
+        return dateA - dateB;
+      });
+      
+      // Sort future tasks by due date
+      futureTasks.sort((a, b) => {
+        const dateA = new Date(a.dueDate);
+        const dateB = new Date(b.dueDate);
+        return dateA - dateB;
+      });
+      
+      // Render immediate due tasks
+      const immediateUl = document.getElementById('immediate-due-tasks');
+      immediateUl.innerHTML = '';
+      immediateTasks.forEach((task, i) => {
+        const li = document.createElement('li');
+        li.className = 'todo-item';
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.style.alignItems = 'center';
+        li.style.padding = '8px';
+        li.style.border = '1px solid var(--border)';
+        li.style.borderRadius = '8px';
+        li.style.backgroundColor = 'var(--surface)';
+        
+        // Add visual indicator for immediate tasks (using local timezone)
+        const taskDueDate = new Date(task.dueDate + 'T00:00:00'); // Ensure local timezone
+        const isPastDue = taskDueDate < today;
+        const isToday = task.dueDate === todayStr;
+        const isTomorrow = task.dueDate === tomorrowStr;
+        
+        let statusText = '';
+        if (isPastDue) {
+          statusText = 'Past Due';
+          li.style.borderLeft = '4px solid var(--error)';
+        } else if (isToday) {
+          statusText = 'Due Today';
+          li.style.borderLeft = '4px solid var(--warning)';
+        } else if (isTomorrow) {
+          statusText = 'Due Tomorrow';
+          li.style.borderLeft = '4px solid var(--accent)';
+        }
+        
+        const isCompleted = task.completed || false;
+        const textStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : '';
+        const statusStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : 'font-size:12px;color:var(--muted)';
+        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${escapeHtml(task.text)}</strong><div style="${statusStyle}">${statusText} - ${task.dueDate}</div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
+        immediateUl.appendChild(li);
+      });
+      
+      // Render future due tasks
+      const futureUl = document.getElementById('future-due-tasks');
+      futureUl.innerHTML = '';
+      futureTasks.forEach((task, i) => {
+        const li = document.createElement('li');
+        li.className = 'todo-item';
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.style.alignItems = 'center';
+        li.style.padding = '8px';
+        li.style.border = '1px solid var(--border)';
+        li.style.borderRadius = '8px';
+        li.style.backgroundColor = 'var(--surface)';
+        li.style.borderLeft = '4px solid var(--muted)';
+        
+        const isCompleted = task.completed || false;
+        const textStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : '';
+        const statusStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : 'font-size:12px;color:var(--muted)';
+        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${escapeHtml(task.text)}</strong><div style="${statusStyle}">Due: ${task.dueDate}</div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
+        futureUl.appendChild(li);
+      });
+    }
 
     function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
 
-    document.getElementById('add-work-task').addEventListener('click', ()=>{ const t=input.value.trim(); if(!t) return; const arr=load(); arr.push({text:t,seconds:0}); save(arr); input.value=''; render(); });
-    ul.addEventListener('click',(e)=>{ const idx = e.target.dataset.i || e.target.dataset.stop || e.target.dataset.del; if(idx==null) return; const i=Number(idx); const arr=load(); if(e.target.dataset.del!=null){ arr.splice(i,1); save(arr); render(); return; } if(e.target.dataset.i!=null){ // start simple interval
-      if(window._workTimer) clearInterval(window._workTimer);
-      window._workTimer = setInterval(()=>{ const a=load(); a[i].seconds = (a[i].seconds||0)+1; save(a); render(); },1000);
-    } if(e.target.dataset.stop!=null){ if(window._workTimer) { clearInterval(window._workTimer); window._workTimer=null; } }
+    document.getElementById('add-work-task').addEventListener('click', ()=>{ 
+      const t=input.value.trim(); 
+      if(!t) return; 
+      const dueDateInput = document.getElementById('due-date-input');
+      const dueDate = dueDateInput.value;
+      
+      const arr=load(); 
+      arr.push({text:t, seconds:0, dueDate: dueDate || ''}); 
+      save(arr); 
+      input.value=''; 
+      dueDateInput.value='';
+      render(); 
+      renderDueSections();
+    });
+    // Event delegation for main tasks list
+    ul.addEventListener('click',(e)=>{ 
+      const idx = e.target.dataset.del || e.target.dataset.complete; 
+      if(idx==null) return; 
+      const i=Number(idx); 
+      const arr=load(); 
+      
+      if(e.target.dataset.del!=null){ 
+        arr.splice(i,1); 
+        save(arr); 
+        render(); 
+        renderDueSections();
+        return; 
+      } 
+      
+      if(e.target.dataset.complete!=null && e.target.type === 'checkbox'){ 
+        arr[i].completed = e.target.checked;
+        save(arr); 
+        render(); 
+        renderDueSections();
+      }
     });
 
     render();
+
+    // Format date to YYYY-MM-DD string using local timezone
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Set default date to today
+    const dueDateInput = document.getElementById('due-date-input');
+    if (dueDateInput) {
+      dueDateInput.value = formatDate(new Date());
+    }
+
+    // Render due sections immediately
+    renderDueSections();
+
 
     // Date picker and weekday functionality
     (function() {
       const datePicker = document.getElementById('date-picker');
       const weekdayBtns = document.querySelectorAll('.weekday-btn');
       let currentDate = new Date();
-
-      // Format date to YYYY-MM-DD string
-      function formatDate(date) {
-        return date.toISOString().split('T')[0];
-      }
 
       // Get weekday number (0 = Sunday, 1 = Monday, etc.)
       function getWeekday(date) {
@@ -121,37 +307,81 @@
         });
       }
 
-      // Go to specific weekday
+      // Go to specific weekday (improved logic)
       function goToWeekday(targetDay) {
         const currentWeekday = getWeekday(currentDate);
         const diff = targetDay - currentWeekday;
         
-        currentDate.setDate(currentDate.getDate() + diff);
-        datePicker.value = formatDate(currentDate);
+        // Create a new date object to avoid mutation issues
+        const newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + diff);
+        currentDate = newDate;
+        
+        if (datePicker) {
+          datePicker.value = formatDate(currentDate);
+        }
         updateWeekdayButtons();
       }
 
-      // Initialize
+      // Initialize with correct local date
       if (datePicker) {
+        // Ensure we're using local date, not UTC
+        const localDate = new Date();
+        currentDate = new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate());
         datePicker.value = formatDate(currentDate);
         updateWeekdayButtons();
         
         // Date picker change event
         datePicker.addEventListener('change', (e) => {
-          currentDate = new Date(e.target.value);
-          updateWeekdayButtons();
+          const selectedDate = new Date(e.target.value);
+          if (!isNaN(selectedDate.getTime())) {
+            currentDate = selectedDate;
+            updateWeekdayButtons();
+          }
         });
       }
 
       // Weekday button events
       weekdayBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
           const day = parseInt(e.target.dataset.day);
-          goToWeekday(day);
+          if (!isNaN(day)) {
+            goToWeekday(day);
+          }
         });
       });
     })();
+
+    // Add global event listeners for all sections
+    document.addEventListener('click', (e) => {
+      // Handle checkbox clicks for all sections
+      if (e.target.dataset.complete && e.target.type === 'checkbox') {
+        const idx = Number(e.target.dataset.complete);
+        const arr = load();
+        if (arr[idx]) {
+          arr[idx].completed = e.target.checked;
+          save(arr);
+          render();
+          renderDueSections();
+        }
+      }
+      
+      // Handle delete button clicks for all sections
+      if (e.target.dataset.del) {
+        const idx = Number(e.target.dataset.del);
+        const arr = load();
+        if (arr[idx]) {
+          arr.splice(idx, 1);
+          save(arr);
+          render();
+          renderDueSections();
+        }
+      }
+    });
+
+    // Due sections are already rendered above
   </script>
-  <script src="script.js"></script>
 </body>
 </html>
