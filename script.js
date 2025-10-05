@@ -114,6 +114,74 @@ const storage = {
   },
 
   /**
+   * Initialize or update user info
+   */
+  async initializeUserInfo(userId) {
+    try {
+      if (!this._firebaseReady || !window.firebase) {
+        console.log('Firebase not ready, skipping user info initialization');
+        return;
+      }
+
+      // Check if user info already exists
+      const existingUserInfo = await this.get('userInfo', 'userInfo');
+      
+      if (!existingUserInfo) {
+        // Get current user data from Firebase Auth
+        const user = window.firebase.auth.currentUser;
+        if (user) {
+          const userInfo = {
+            email: user.email,
+            displayName: user.displayName || user.email?.split('@')[0] || 'User',
+            uid: user.uid,
+            createdAt: user.metadata?.creationTime || new Date().toISOString(),
+            lastLoginAt: new Date().toISOString(),
+            provider: user.providerData[0]?.providerId || 'unknown'
+          };
+
+          await this.set('userInfo', userInfo, 'userInfo');
+          console.log('✅ User info initialized:', userInfo);
+        }
+      } else {
+        // Update last login time
+        const updatedUserInfo = {
+          ...existingUserInfo,
+          lastLoginAt: new Date().toISOString()
+        };
+        await this.set('userInfo', updatedUserInfo, 'userInfo');
+        console.log('✅ User info updated with last login time');
+      }
+    } catch (error) {
+      console.error('Error initializing user info:', error);
+    }
+  },
+
+  /**
+   * Get user info
+   */
+  async getUserInfo() {
+    try {
+      const userInfo = await this.get('userInfo', 'userInfo');
+      return userInfo;
+    } catch (error) {
+      console.error('Error getting user info:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Update user info
+   */
+  async updateUserInfo(userInfo) {
+    try {
+      await this.set('userInfo', userInfo, 'userInfo');
+      console.log('✅ User info updated:', userInfo);
+    } catch (error) {
+      console.error('Error updating user info:', error);
+    }
+  },
+
+  /**
    * Get data for a specific date and page
    * @param {string} dateStr - Date in YYYY-MM-DD format
    * @param {string} page - Page name (planner, habits, expenses, work, pomodoro)
@@ -188,8 +256,8 @@ const storage = {
     try {
       const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
       
-      // Get all localStorage keys for all pages
-      const pages = ['planner', 'habits', 'expenses', 'work', 'pomodoro'];
+        // Get all localStorage keys for all pages
+        const pages = ['planner', 'habits', 'expenses', 'work', 'pomodoro', 'userInfo'];
       let totalSynced = 0;
       
       for (const page of pages) {
@@ -1122,6 +1190,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize authentication event handlers
     initializeAuthHandlers();
     
+    // Initialize user info dropdown
+    initializeUserInfoDropdown();
+    
     // Create planner manager
     const planner = new PlannerManager();
     
@@ -1261,6 +1332,9 @@ window.initWithFirebase = async function(userId) {
     // Initialize storage with Firebase
     storage.initFirebase(userId, 'daily-planner');
     
+    // Initialize or update user info
+    await storage.initializeUserInfo(userId);
+    
     // Sync existing localStorage data to Firebase
     await storage.syncToFirebase();
     
@@ -1285,6 +1359,175 @@ window.initWithFirebase = async function(userId) {
 // ============================================================================
 // AUTHENTICATION HANDLERS
 // ============================================================================
+
+/**
+ * Initialize user info dropdown
+ */
+function initializeUserInfoDropdown() {
+  const userEmail = document.getElementById('user-email');
+  const userInfoDropdown = document.getElementById('user-info-dropdown');
+  const saveUserInfoBtn = document.getElementById('save-user-info-btn');
+  const dropdownLogoutBtn = document.getElementById('dropdown-logout-btn');
+  const deleteAccountBtn = document.getElementById('delete-account-btn');
+  
+  if (!userEmail || !userInfoDropdown) return;
+  
+  let isDropdownOpen = false;
+  
+  // Toggle dropdown when clicking on email
+  userEmail.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleDropdown();
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!userInfoDropdown.contains(e.target) && !userEmail.contains(e.target)) {
+      closeDropdown();
+    }
+  });
+  
+  // Save user info
+  if (saveUserInfoBtn) {
+    saveUserInfoBtn.addEventListener('click', async () => {
+      await saveUserInfo();
+    });
+  }
+  
+  // Logout from dropdown
+  if (dropdownLogoutBtn) {
+    dropdownLogoutBtn.addEventListener('click', async () => {
+      await logoutUser();
+    });
+  }
+  
+  // Delete account
+  if (deleteAccountBtn) {
+    deleteAccountBtn.addEventListener('click', async () => {
+      await deleteUserAccount();
+    });
+  }
+  
+  function toggleDropdown() {
+    if (isDropdownOpen) {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
+  }
+  
+  function openDropdown() {
+    userInfoDropdown.style.display = 'block';
+    isDropdownOpen = true;
+    loadUserInfoToDropdown();
+  }
+  
+  function closeDropdown() {
+    userInfoDropdown.style.display = 'none';
+    isDropdownOpen = false;
+  }
+  
+  async function loadUserInfoToDropdown() {
+    try {
+      const userInfo = await storage.getUserInfo();
+      if (userInfo) {
+        document.getElementById('dropdown-email').textContent = userInfo.email || 'N/A';
+        document.getElementById('dropdown-display-name').value = userInfo.displayName || '';
+        document.getElementById('dropdown-created').textContent = formatDateDisplay(userInfo.createdAt);
+        document.getElementById('dropdown-last-login').textContent = formatDateDisplay(userInfo.lastLoginAt);
+        document.getElementById('dropdown-provider').textContent = formatProvider(userInfo.provider);
+      }
+    } catch (error) {
+      console.error('Error loading user info to dropdown:', error);
+    }
+  }
+  
+  async function saveUserInfo() {
+    try {
+      const userInfo = await storage.getUserInfo();
+      if (!userInfo) return;
+      
+      const displayName = document.getElementById('dropdown-display-name').value.trim();
+      if (displayName && displayName !== userInfo.displayName) {
+        userInfo.displayName = displayName;
+        await storage.updateUserInfo(userInfo);
+        
+        // Update Firebase Auth profile
+        if (window.firebase?.auth?.currentUser) {
+          const { updateProfile } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+          await updateProfile(window.firebase.auth.currentUser, {
+            displayName: displayName
+          });
+        }
+        
+        console.log('✅ Profile updated successfully');
+        alert('Profile updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error saving user info:', error);
+      alert('Error saving profile. Please try again.');
+    }
+  }
+  
+  async function logoutUser() {
+    try {
+      if (window.authFunctions?.signOut) {
+        await window.authFunctions.signOut();
+        closeDropdown();
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  }
+  
+  async function deleteUserAccount() {
+    const confirmed = confirm(
+      'Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.'
+    );
+    
+    if (!confirmed) return;
+    
+    const doubleConfirmed = confirm(
+      'This will permanently delete ALL your data including:\n' +
+      '• All planner entries\n' +
+      '• All habits and tracking data\n' +
+      '• All expense records\n' +
+      '• All work tasks and duties\n' +
+      '• All account information\n\n' +
+      'Are you absolutely sure?'
+    );
+    
+    if (!doubleConfirmed) return;
+    
+    try {
+      // Delete all user data from Firebase
+      if (window.firebase?.auth?.currentUser) {
+        // Note: Firebase doesn't provide a direct way to delete user accounts from client-side
+        // This would typically require a Cloud Function or admin SDK
+        alert('Account deletion requires server-side implementation. Please contact support.');
+        return;
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      alert('Error deleting account. Please try again or contact support.');
+    }
+  }
+  
+  function formatDateDisplay(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  }
+  
+  function formatProvider(provider) {
+    const providers = {
+      'google.com': 'Google',
+      'password': 'Email/Password',
+      'unknown': 'Unknown'
+    };
+    return providers[provider] || provider;
+  }
+}
 
 /**
  * Initialize authentication event handlers

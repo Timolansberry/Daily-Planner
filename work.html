@@ -63,6 +63,40 @@
           <div id="auth-status" class="auth-status">
             <span id="user-email" class="user-email"></span>
             <button type="button" id="sign-out-btn" class="sign-out-btn" style="display: none;">Sign Out</button>
+            
+            <!-- User Info Dropdown -->
+            <div id="user-info-dropdown" class="user-info-dropdown" style="display: none;">
+                <div class="user-info-header">
+                    <h3>Account Information</h3>
+                </div>
+                <div class="user-info-content">
+                    <div class="info-row">
+                        <label>Email:</label>
+                        <span id="dropdown-email">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Display Name:</label>
+                        <input type="text" id="dropdown-display-name" class="dropdown-input" placeholder="Enter name">
+                    </div>
+                    <div class="info-row">
+                        <label>Account Created:</label>
+                        <span id="dropdown-created">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Last Login:</label>
+                        <span id="dropdown-last-login">Loading...</span>
+                    </div>
+                    <div class="info-row">
+                        <label>Provider:</label>
+                        <span id="dropdown-provider">Loading...</span>
+                    </div>
+                </div>
+                <div class="user-info-actions">
+                    <button type="button" id="save-user-info-btn" class="save-user-info-btn">Save Changes</button>
+                    <button type="button" id="dropdown-logout-btn" class="dropdown-logout-btn">Log Out</button>
+                    <button type="button" id="delete-account-btn" class="delete-account-btn">Delete Account</button>
+                </div>
+            </div>
           </div>
           <button type="button" id="sign-in-btn" class="sign-in-btn" style="display: none;">Sign In</button>
         </div>
@@ -703,7 +737,7 @@
     const googleProvider = new GoogleAuthProvider();
 
     // Make Firebase available globally
-    window.firebase = { app, db, auth, googleProvider };
+    window.firebase = { app, db, auth, googleProvider, updateProfile };
     
     // Authentication state change handler
     onAuthStateChanged(auth, (user) => {

@@ -320,7 +320,7 @@
             const googleProvider = new GoogleAuthProvider();
 
             // Make Firebase available globally
-            window.firebase = { app, db, auth, googleProvider };
+            window.firebase = { app, db, auth, googleProvider, updateProfile };
             
             // Authentication state change handler
             onAuthStateChanged(auth, (user) => {

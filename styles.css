@@ -2389,3 +2389,152 @@ body {
 [data-theme="light"] .auth-divider span {
   background: white;
 }
+
+/* User Info Dropdown Styles */
+.user-info-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  min-width: 320px;
+  z-index: 1000;
+  margin-top: 8px;
+}
+
+.user-info-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.user-info-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.user-info-content {
+  padding: 16px 20px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-row label {
+  font-weight: 500;
+  color: var(--text);
+  min-width: 100px;
+  font-size: 0.9rem;
+}
+
+.info-row span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  flex: 1;
+  text-align: right;
+}
+
+.dropdown-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.dropdown-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+.user-info-actions {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.save-user-info-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.save-user-info-btn:hover {
+  background: var(--accent-hover);
+}
+
+.dropdown-logout-btn {
+  background: var(--muted);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.dropdown-logout-btn:hover {
+  background: var(--border);
+}
+
+.delete-account-btn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+.delete-account-btn:hover {
+  background: #b91c1c;
+}
+
+/* Make user-email clickable */
+.user-email {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.user-email:hover {
+  color: var(--accent);
+}
+
+/* Dark mode adjustments for dropdown */
+[data-theme="dark"] .dropdown-input {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .dropdown-input:focus {
+  background: var(--background);
+}
