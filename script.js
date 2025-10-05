@@ -270,11 +270,30 @@ class PlannerManager {
       const data = await storage.get(dateStr, 'planner');
       currentPlan = data || getEmptyPlan();
 
-      // Normalize older/newer data shapes: ensure `habits` is an array
+      // Normalize older/newer data shapes: ensure `habits` and `todos` are arrays
       if (!Array.isArray(currentPlan.habits)) {
         // If there is an older habitCompletion map, we can't reconstruct habit text here,
         // so default to an empty array. This prevents runtime errors when rendering.
         currentPlan.habits = [];
+      }
+      
+      // Ensure todos is always an array
+      if (!Array.isArray(currentPlan.todos)) {
+        currentPlan.todos = [];
+      }
+      
+      // Ensure topThree is always an array
+      if (!Array.isArray(currentPlan.topThree)) {
+        currentPlan.topThree = [];
+      }
+      
+      // Ensure schedule is always an object
+      if (!currentPlan.schedule || typeof currentPlan.schedule !== 'object') {
+        currentPlan.schedule = {
+          '06:00': '', '07:00': '', '08:00': '', '09:00': '', '10:00': '', '11:00': '',
+          '12:00': '', '13:00': '', '14:00': '', '15:00': '', '16:00': '', '17:00': '',
+          '18:00': '', '19:00': '', '20:00': '', '21:00': '', '22:00': '', '23:00': ''
+        };
       }
       this.renderAll();
       announceStatus(`Loaded plan for ${dateStr}`);
