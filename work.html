@@ -32,6 +32,15 @@
         flex-direction: row;
       }
     }
+    
+    /* Editable due date styling */
+    .due-date-editable {
+      transition: color 0.2s ease;
+    }
+    
+    .due-date-editable:hover {
+      color: var(--accent) !important;
+    }
   </style>
 </head>
 <body>
@@ -261,7 +270,7 @@
         const isCompleted = task.completed || false;
         const textStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : '';
         const statusStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : 'font-size:12px;color:var(--muted)';
-        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${convertUrlsToLinks(task.text)}</strong><div style="${statusStyle}">${statusText} - ${task.dueDate}</div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
+        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${convertUrlsToLinks(task.text)}</strong><div style="${statusStyle}"><span class="status-text">${statusText} - </span><span class="due-date-editable" data-edit-date="${task.originalIndex}" style="cursor:pointer;text-decoration:underline;">${task.dueDate}</span></div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
         immediateUl.appendChild(li);
       });
       
@@ -283,7 +292,7 @@
         const isCompleted = task.completed || false;
         const textStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : '';
         const statusStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : 'font-size:12px;color:var(--muted)';
-        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${convertUrlsToLinks(task.text)}</strong><div style="${statusStyle}">Due: ${task.dueDate}</div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
+        li.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete="${task.originalIndex}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><div><strong class="task-text" style="${textStyle}">${convertUrlsToLinks(task.text)}</strong><div style="${statusStyle}">Due: <span class="due-date-editable" data-edit-date="${task.originalIndex}" style="cursor:pointer;text-decoration:underline;">${task.dueDate}</span></div></div></div><div><button data-del="${task.originalIndex}" class="todo-delete" title="Delete task">🗑️</button></div>`;
         futureUl.appendChild(li);
       });
     }
@@ -529,6 +538,59 @@
           arr.splice(idx, 1);
           saveDailyDuties(arr);
           renderDailyDuties();
+        }
+      }
+      
+      // Handle due date editing
+      if (e.target.classList.contains('due-date-editable')) {
+        const idx = Number(e.target.dataset.editDate);
+        const arr = load();
+        if (arr[idx]) {
+          // Create a temporary date input
+          const dateInput = document.createElement('input');
+          dateInput.type = 'date';
+          dateInput.value = arr[idx].dueDate;
+          dateInput.style.cssText = 'padding:4px;border-radius:4px;border:1px solid var(--accent);background:var(--surface);color:var(--text);font-size:12px;';
+          
+          // Replace the text with the date input
+          const originalText = e.target.textContent;
+          e.target.innerHTML = '';
+          e.target.appendChild(dateInput);
+          e.target.style.cursor = 'default';
+          
+          // Focus and select the input
+          dateInput.focus();
+          dateInput.select();
+          
+          // Handle saving the new date
+          const saveDate = () => {
+            const newDate = dateInput.value;
+            if (newDate && newDate !== arr[idx].dueDate) {
+              arr[idx].dueDate = newDate;
+              save(arr);
+              render();
+              renderDueSections();
+            } else {
+              // Restore original text if no change
+              e.target.innerHTML = originalText;
+              e.target.style.cursor = 'pointer';
+            }
+          };
+          
+          // Save on change or blur
+          dateInput.addEventListener('change', saveDate);
+          dateInput.addEventListener('blur', saveDate);
+          
+          // Save on Enter key
+          dateInput.addEventListener('keydown', (keyEvent) => {
+            if (keyEvent.key === 'Enter') {
+              saveDate();
+            } else if (keyEvent.key === 'Escape') {
+              // Cancel editing
+              e.target.innerHTML = originalText;
+              e.target.style.cursor = 'pointer';
+            }
+          });
         }
       }
     });
