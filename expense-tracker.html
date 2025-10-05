@@ -357,9 +357,11 @@
       if (user) {
         // User is signed in
         if (signInBtn) signInBtn.style.display = 'none';
-        if (signOutBtn) signOutBtn.style.display = 'block';
+        if (signOutBtn) signOutBtn.style.display = 'none'; // Hide sign out button
         if (userEmail) {
-          userEmail.textContent = user.email || 'Anonymous User';
+          // Show display name if available, otherwise show email
+          const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+          userEmail.textContent = displayName;
           userEmail.style.display = 'block';
         }
         if (authModal) authModal.style.display = 'none';
