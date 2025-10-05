@@ -5,6 +5,34 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Work</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Responsive layout for duties and tasks sections */
+    .duties-tasks-container {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .duties-section, .tasks-section {
+      flex: 1;
+      min-width: 0; /* Prevents flex items from overflowing */
+    }
+    
+    /* Mobile and small screens - stack vertically */
+    @media (max-width: 768px) {
+      .duties-tasks-container {
+        flex-direction: column;
+        gap: 16px;
+      }
+    }
+    
+    /* Medium screens and up - side by side */
+    @media (min-width: 769px) {
+      .duties-tasks-container {
+        flex-direction: row;
+      }
+    }
+  </style>
 </head>
 <body>
     <div class="container work-page">
@@ -64,8 +92,18 @@
     </script>
 
     <main class="main-content">
-      <section class="section">
-        <h2 class="section-title">Tasks</h2>
+      <div class="duties-tasks-container">
+        <section class="section duties-section">
+          <h2 class="section-title">Daily Duties</h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input id="daily-duty-input" placeholder="New daily duty" style="flex:1;min-width:200px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
+            <button id="add-daily-duty" class="add-btn">+</button>
+          </div>
+          <ul id="daily-duties" style="list-style:none;margin-top:12px;padding:0;display:flex;flex-direction:column;gap:8px"></ul>
+        </section>
+        
+        <section class="section tasks-section">
+          <h2 class="section-title">Tasks</h2>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <input id="work-task-input" placeholder="New task" style="flex:1;min-width:200px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
           <input type="date" id="due-date-input" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);min-width:140px;">
@@ -84,15 +122,40 @@
           <h3 style="color:var(--accent);margin-bottom:12px;font-size:1.1rem;">Future Due Tasks</h3>
           <ul id="future-due-tasks" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px"></ul>
         </div>
-      </section>
+        </section>
+      </div>
     </main>
   </div>
 
   <script>
     const TASK_KEY = 'dailyplanner:worktasks';
+    const DAILY_DUTIES_KEY = 'dailyplanner:dailyduties';
+    
     function load(){ try{return JSON.parse(localStorage.getItem(TASK_KEY))||[] }catch(e){return[]}}
     function save(a){ localStorage.setItem(TASK_KEY, JSON.stringify(a)); }
+    
+    function loadDailyDuties(){ try{return JSON.parse(localStorage.getItem(DAILY_DUTIES_KEY))||[] }catch(e){return[]}}
+    function saveDailyDuties(a){ localStorage.setItem(DAILY_DUTIES_KEY, JSON.stringify(a)); }
+    
     const ul = document.getElementById('work-tasks'); const input = document.getElementById('work-task-input');
+    const dailyDutiesUl = document.getElementById('daily-duties'); const dailyDutyInput = document.getElementById('daily-duty-input');
+
+    function renderDailyDuties(){ 
+      const arr=loadDailyDuties(); 
+      dailyDutiesUl.innerHTML=''; 
+      
+      arr.forEach((t,i)=>{ 
+        const li=document.createElement('li'); 
+        li.className = 'todo-item';
+        li.style.display='flex'; 
+        li.style.justifyContent='space-between'; 
+        li.style.alignItems='center'; 
+        const isCompleted = t.completed || false;
+        const textStyle = isCompleted ? 'text-decoration:line-through;color:var(--success);' : '';
+        li.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><input type="checkbox" data-complete-duty="${i}" style="width:16px;height:16px;" ${isCompleted ? 'checked' : ''}><span class="duty-text" style="${textStyle}">${convertUrlsToLinks(t.text)}</span></div><div><button data-del-duty="${i}" class="todo-delete" title="Delete duty">🗑️</button></div>`; 
+        dailyDutiesUl.appendChild(li); 
+      }); 
+    }
 
     function render(){ 
       const arr=load(); 
@@ -266,8 +329,21 @@
       renderDueSections();
     }
 
+    // Function to add a new daily duty
+    function addNewDailyDuty() {
+      const t = dailyDutyInput.value.trim(); 
+      if(!t) return; 
+      
+      const arr = loadDailyDuties(); 
+      arr.push({text:t, completed: false}); 
+      saveDailyDuties(arr); 
+      dailyDutyInput.value=''; 
+      renderDailyDuties();
+    }
+
     // Add click event for the add button
     document.getElementById('add-work-task').addEventListener('click', addNewTask);
+    document.getElementById('add-daily-duty').addEventListener('click', addNewDailyDuty);
 
     // Add keyboard shortcuts for the task input
     input.addEventListener('keydown', (e) => {
@@ -279,6 +355,20 @@
           // Enter: Add the task
           e.preventDefault();
           addNewTask();
+        }
+      }
+    });
+
+    // Add keyboard shortcuts for the daily duty input
+    dailyDutyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (e.shiftKey) {
+          // Shift+Enter: Allow default behavior (new line)
+          return;
+        } else {
+          // Enter: Add the duty
+          e.preventDefault();
+          addNewDailyDuty();
         }
       }
     });
@@ -306,6 +396,7 @@
     });
 
     render();
+    renderDailyDuties();
 
     // Format date to YYYY-MM-DD string using local timezone
     function formatDate(date) {
@@ -395,7 +486,7 @@
 
     // Add global event listeners for all sections
     document.addEventListener('click', (e) => {
-      // Handle checkbox clicks for all sections
+      // Handle checkbox clicks for tasks
       if (e.target.dataset.complete && e.target.type === 'checkbox') {
         const idx = Number(e.target.dataset.complete);
         const arr = load();
@@ -407,7 +498,18 @@
         }
       }
       
-      // Handle delete button clicks for all sections
+      // Handle checkbox clicks for daily duties
+      if (e.target.dataset.completeDuty && e.target.type === 'checkbox') {
+        const idx = Number(e.target.dataset.completeDuty);
+        const arr = loadDailyDuties();
+        if (arr[idx]) {
+          arr[idx].completed = e.target.checked;
+          saveDailyDuties(arr);
+          renderDailyDuties();
+        }
+      }
+      
+      // Handle delete button clicks for tasks
       if (e.target.dataset.del) {
         const idx = Number(e.target.dataset.del);
         const arr = load();
@@ -416,6 +518,17 @@
           save(arr);
           render();
           renderDueSections();
+        }
+      }
+      
+      // Handle delete button clicks for daily duties
+      if (e.target.dataset.delDuty) {
+        const idx = Number(e.target.dataset.delDuty);
+        const arr = loadDailyDuties();
+        if (arr[idx]) {
+          arr.splice(idx, 1);
+          saveDailyDuties(arr);
+          renderDailyDuties();
         }
       }
     });
