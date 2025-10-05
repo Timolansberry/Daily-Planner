@@ -234,8 +234,9 @@ body {
 .theme-toggle-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -247,7 +248,7 @@ body {
   transition: all 0.2s ease;
   margin-top: auto;
   width: 100%;
-  justify-content: center;
+  min-height: 44px;
 }
 
 .theme-toggle-btn:hover {
@@ -271,9 +272,10 @@ body {
   }
   
   .theme-toggle-btn {
-    padding: 0.5rem;
+    padding: 0.5rem 0.75rem;
     width: auto;
     min-width: 44px;
+    min-height: 44px;
     justify-content: center;
     border-radius: var(--radius-md);
   }
@@ -2038,6 +2040,7 @@ body {
   align-items: center;
   gap: var(--space-4);
   margin-left: auto;
+  height: 100%;
 }
 
 .auth-section {
@@ -2522,11 +2525,29 @@ body {
 /* Make user-email clickable */
 .user-email {
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-weight: 500;
 }
 
 .user-email:hover {
-  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  transform: scale(1.05);
+}
+
+.user-email svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* Dark mode adjustments for dropdown */

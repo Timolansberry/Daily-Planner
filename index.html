@@ -354,9 +354,8 @@
                 if (signInBtn) signInBtn.style.display = 'none';
                 if (signOutBtn) signOutBtn.style.display = 'none'; // Hide sign out button
                 if (userEmail) {
-                    // Show display name if available, otherwise show email
-                    const displayName = user.displayName || user.email?.split('@')[0] || 'User';
-                    userEmail.textContent = displayName;
+                    // Show person icon instead of name
+                    userEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
                     userEmail.style.display = 'block';
                 }
                 if (authModal) authModal.style.display = 'none';
@@ -440,12 +439,27 @@
         // Call the initialization function
         initializeFirebase();
         
-        // Ensure authentication UI is visible by default (fallback)
+        // Ensure authentication UI is correct by default (fallback)
         setTimeout(() => {
             const signInBtn = document.getElementById('sign-in-btn');
-            if (signInBtn && signInBtn.style.display === 'none') {
-                console.log('Fallback: Making sign-in button visible');
-                signInBtn.style.display = 'block';
+            const signOutBtn = document.getElementById('sign-out-btn');
+            const userEmail = document.getElementById('user-email');
+            
+            // Check if user is actually signed in by checking Firebase auth state
+            if (auth.currentUser) {
+                console.log('Fallback: User is signed in, updating UI...');
+                if (signInBtn) signInBtn.style.display = 'none';
+                if (signOutBtn) signOutBtn.style.display = 'none';
+                if (userEmail) {
+                    // Show person icon instead of name
+                    userEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                    userEmail.style.display = 'block';
+                }
+            } else {
+                console.log('Fallback: No user signed in, showing sign-in button');
+                if (signInBtn) signInBtn.style.display = 'block';
+                if (signOutBtn) signOutBtn.style.display = 'none';
+                if (userEmail) userEmail.style.display = 'none';
             }
         }, 1000);
     </script>
