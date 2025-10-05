@@ -640,6 +640,18 @@ body {
   min-height: 100vh;
 }
 
+/* Work page specific layout - center the tasks section horizontally */
+.work-page .main-content {
+  display: flex;
+  justify-content: center;
+}
+
+.work-page .main-content .section {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
 /* Header */
 .header {
   display: flex;
