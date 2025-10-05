@@ -1,22 +1,78 @@
-# Firebase Configuration (contains sensitive API keys)
-firebase-config.js
-
-# Environment files
-.env
-.env.local
-.env.production
-
-# Node modules (if using npm)
+# -------------------------
+# Node / tooling
+# -------------------------
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.pid
+*.pid.lock
 
-# Build files
+# Keep your lockfile committed! (uncomment if you truly need to ignore)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# -------------------------
+# Environment / secrets
+# -------------------------
+.env
+.env.*        # .env.local, .env.production, etc.
+*.secret.*
+*.private.*
+
+# -------------------------
+# Build & cache output
+# -------------------------
 dist/
 build/
+out/
+coverage/
+.cache/
+.parcel-cache/
+.vite/
+.svelte-kit/
+.next/
+.nuxt/
 
-# IDE files
+# -------------------------
+# Firebase
+# -------------------------
+.firebase/                 # local firebase state
+.firebaserc.local          # local-only overrides (keep .firebaserc committed)
+firebase-debug.log         # CLI debug logs
+
+# If you ever place emulator cache inside the repo, ignore it:
+firebase-emulators/
+.firebase-emulators/
+
+# DO NOT ignore your rules/config files — keep these in git:
+#   firebase.json
+#   .firebaserc
+#   database.rules.json
+#   firestore.rules
+#   storage.rules
+
+# -------------------------
+# IDE / editor
+# -------------------------
 .vscode/
 .idea/
+*.iml
 
-# OS files
+# -------------------------
+# OS cruft
+# -------------------------
 .DS_Store
+._*
 Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# -------------------------
+# Misc temp files
+# -------------------------
+*.swp
+*.swo
+*.tmp
