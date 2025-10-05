@@ -1381,14 +1381,6 @@ function initializeUserInfoDropdown() {
   
   if (!userEmail || !userInfoDropdown) return;
   
-  // Debug: Check if mobile user info menu elements exist
-  console.log('User info dropdown elements:', {
-    userEmail: !!userEmail,
-    userInfoDropdown: !!userInfoDropdown,
-    mobileUserEmail: !!mobileUserEmail,
-    userInfoMenu: !!userInfoMenu,
-    userInfoMenuBackdrop: !!userInfoMenuBackdrop
-  });
   
   let isDropdownOpen = false;
   
@@ -1491,20 +1483,18 @@ function initializeUserInfoDropdown() {
     isDropdownOpen = false;
   }
   
-  async function loadUserInfoToDropdown() {
-    try {
-      const userInfo = await storage.getUserInfo();
-      if (userInfo) {
-        document.getElementById('dropdown-email').textContent = userInfo.email || 'N/A';
-        document.getElementById('dropdown-display-name').value = userInfo.displayName || '';
-        document.getElementById('dropdown-created').textContent = formatDateDisplay(userInfo.createdAt);
-        document.getElementById('dropdown-last-login').textContent = formatDateDisplay(userInfo.lastLoginAt);
-        document.getElementById('dropdown-provider').textContent = formatProvider(userInfo.provider);
-      }
-    } catch (error) {
-      console.error('Error loading user info to dropdown:', error);
-    }
-  }
+          async function loadUserInfoToDropdown() {
+            try {
+              const userInfo = await storage.getUserInfo();
+              if (userInfo) {
+                document.getElementById('dropdown-email').textContent = userInfo.email || 'N/A';
+                document.getElementById('dropdown-display-name').value = userInfo.displayName || '';
+                document.getElementById('dropdown-created').textContent = formatDateDisplay(userInfo.createdAt);
+              }
+            } catch (error) {
+              console.error('Error loading user info to dropdown:', error);
+            }
+          }
   
   async function saveUserInfo() {
     try {
@@ -1594,21 +1584,15 @@ function initializeUserInfoDropdown() {
   
   // User Info Menu Functions
   function openUserInfoMenu() {
-    console.log('Opening user info menu...', { userInfoMenu, userInfoMenuBackdrop });
     if (userInfoMenu && userInfoMenuBackdrop) {
-      console.log('Adding open class to menu and show class to backdrop');
       userInfoMenu.classList.add('open');
       userInfoMenuBackdrop.classList.add('show');
       loadUserInfoToMenu();
-    } else {
-      console.error('User info menu elements not found:', { userInfoMenu, userInfoMenuBackdrop });
     }
   }
   
   function closeUserInfoMenu() {
-    console.log('Closing user info menu...');
     if (userInfoMenu && userInfoMenuBackdrop) {
-      console.log('Removing open class from menu and show class from backdrop');
       userInfoMenu.classList.remove('open');
       userInfoMenuBackdrop.classList.remove('show');
     }
@@ -1621,8 +1605,6 @@ function initializeUserInfoDropdown() {
         document.getElementById('menu-email').textContent = userInfo.email || 'N/A';
         document.getElementById('menu-display-name').value = userInfo.displayName || '';
         document.getElementById('menu-created').textContent = formatDateDisplay(userInfo.createdAt);
-        document.getElementById('menu-last-login').textContent = formatDateDisplay(userInfo.lastLoginAt);
-        document.getElementById('menu-provider').textContent = formatProvider(userInfo.provider);
       }
     } catch (error) {
       console.error('Error loading user info to menu:', error);

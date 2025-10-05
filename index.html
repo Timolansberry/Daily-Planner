@@ -34,20 +34,12 @@
                         <span id="menu-email">Loading...</span>
                     </div>
                     <div class="info-row">
-                        <label>Display Name:</label>
+                        <label>User Name:</label>
                         <input type="text" id="menu-display-name" class="menu-input" placeholder="Enter name">
                     </div>
                     <div class="info-row">
                         <label>Account Created:</label>
                         <span id="menu-created">Loading...</span>
-                    </div>
-                    <div class="info-row">
-                        <label>Last Login:</label>
-                        <span id="menu-last-login">Loading...</span>
-                    </div>
-                    <div class="info-row">
-                        <label>Provider:</label>
-                        <span id="menu-provider">Loading...</span>
                     </div>
                 </div>
                 <div class="user-info-menu-actions">
@@ -69,10 +61,10 @@
                 <a href="pomodoro.html">Pomodoro</a>
                 <a href="work.html">Work</a>
                 <div class="nav-controls">
-                    <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
-                        <span class="theme-icon">🌙</span>
-                        <span class="theme-text">Dark Mode</span>
-                    </button>
+                <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
+                    <span class="theme-icon">🌙</span>
+                    <span class="theme-text">Dark Mode</span>
+                </button>
                     <div class="auth-section">
                         <div id="auth-status" class="auth-status">
                             <span id="user-email" class="user-email" style="display: none;"></span>
@@ -83,28 +75,20 @@
                                 <div class="user-info-header">
                                     <h3>Account Information</h3>
                                 </div>
-                                <div class="user-info-content">
-                                    <div class="info-row">
-                                        <label>Email:</label>
-                                        <span id="dropdown-email">Loading...</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <label>Display Name:</label>
-                                        <input type="text" id="dropdown-display-name" class="dropdown-input" placeholder="Enter name">
-                                    </div>
-                                    <div class="info-row">
-                                        <label>Account Created:</label>
-                                        <span id="dropdown-created">Loading...</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <label>Last Login:</label>
-                                        <span id="dropdown-last-login">Loading...</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <label>Provider:</label>
-                                        <span id="dropdown-provider">Loading...</span>
-                                    </div>
+                            <div class="user-info-content">
+                                <div class="info-row">
+                                    <label>Email:</label>
+                                    <span id="dropdown-email">Loading...</span>
                                 </div>
+                                <div class="info-row">
+                                    <label>User Name:</label>
+                                    <input type="text" id="dropdown-display-name" class="dropdown-input" placeholder="Enter name">
+                                </div>
+                                <div class="info-row">
+                                    <label>Account Created:</label>
+                                    <span id="dropdown-created">Loading...</span>
+                                </div>
+                            </div>
                                 <div class="user-info-actions">
                                     <button type="button" id="save-user-info-btn" class="save-user-info-btn">Save Changes</button>
                                     <button type="button" id="dropdown-logout-btn" class="dropdown-logout-btn">Log Out</button>
@@ -335,39 +319,39 @@
         
         // Initialize Firebase
         async function initializeFirebase() {
-            // Try to load Firebase config from separate file, fallback to demo
-            let firebaseConfig;
-            try {
-                // This will only work if firebase-config.js exists
-                const configModule = await import('./firebase-config.js');
-                firebaseConfig = configModule.firebaseConfig;
-                console.log('✅ Loaded Firebase config from file');
-            } catch (error) {
-                console.warn('⚠️ No Firebase config file found, using localStorage only');
-                console.log('📝 To enable Firebase:');
-                console.log('   1. Copy firebase-config.example.js to firebase-config.js');
-                console.log('   2. Add your Firebase project configuration');
-                console.log('   3. Refresh the page');
-                
-                // Initialize app without Firebase
+        // Try to load Firebase config from separate file, fallback to demo
+        let firebaseConfig;
+        try {
+            // This will only work if firebase-config.js exists
+            const configModule = await import('./firebase-config.js');
+            firebaseConfig = configModule.firebaseConfig;
+            console.log('✅ Loaded Firebase config from file');
+        } catch (error) {
+            console.warn('⚠️ No Firebase config file found, using localStorage only');
+            console.log('📝 To enable Firebase:');
+            console.log('   1. Copy firebase-config.example.js to firebase-config.js');
+            console.log('   2. Add your Firebase project configuration');
+            console.log('   3. Refresh the page');
+            
+            // Initialize app without Firebase
                 if (window.initWithFirebase) {
                     window.initWithFirebase('anonymous');
-                }
-                return;
             }
+            return;
+        }
 
-            // Initialize Firebase
-            const app = initializeApp(firebaseConfig);
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
             const db = getDatabase(app);
-            const auth = getAuth(app);
+        const auth = getAuth(app);
             const googleProvider = new GoogleAuthProvider();
 
-            // Make Firebase available globally
+        // Make Firebase available globally
             window.firebase = { app, db, auth, googleProvider, updateProfile };
-            
+        
             // Authentication state change handler
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
                     console.log('User signed in:', user.uid, user.email);
                     updateAuthUI(user);
                     
