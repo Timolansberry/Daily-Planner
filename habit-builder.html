@@ -334,14 +334,45 @@
         // Make Firebase available globally
         window.firebase = { app, db, auth, googleProvider, updateProfile };
         
+        // Track if user was previously signed in to avoid reload loop on initial load
+        let wasUserSignedIn = false;
+        
         // Authentication state change handler
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 console.log('User signed in:', user.uid, user.email);
+                wasUserSignedIn = true;
                 updateAuthUI(user);
+                
+                // Initialize Firebase storage
+                if (window.initWithFirebase) {
+                    window.initWithFirebase(user.uid);
+                }
             } else {
                 console.log('No user signed in');
                 updateAuthUI(null);
+                
+                // Only clear data and refresh if user was previously signed in (actual logout)
+                if (wasUserSignedIn) {
+                  // Clear local data and reset app state when user logs out
+                  if (window.storage && window.storage.clearLocalData) {
+                    window.storage.clearLocalData();
+                    console.log('Local data cleared on logout');
+                  }
+                  
+                  // Reset to empty plan and re-render
+                  if (window.plannerApp && window.currentPlan) {
+                    window.currentPlan = window.getEmptyPlan();
+                    window.plannerApp.renderAll();
+                    console.log('App state reset on logout');
+                  }
+                  
+                  // Refresh the page to ensure clean UI state
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 100);
+                }
+                wasUserSignedIn = false;
             }
         });
 
@@ -625,7 +656,7 @@
             const mobileUserEmail = document.getElementById('mobile-user-email');
             
             // Check if user is actually signed in by checking Firebase auth state
-            if (auth.currentUser) {
+            if (window.firebase && window.firebase.auth && window.firebase.auth.currentUser) {
                 console.log('Fallback: User is signed in, updating UI...');
                 if (signInBtn) signInBtn.style.display = 'none';
                 if (signOutBtn) signOutBtn.style.display = 'none';
@@ -654,5 +685,45 @@
     </script>
     
     <script src="script.js"></script>
+    
+    <!-- Initialize PlannerManager for habit-builder page -->
+    <script>
+        // Wait for script.js to load and initialize the planner for habits page
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait a bit for script.js to initialize
+            setTimeout(async () => {
+                if (window.PlannerManager && !window.plannerApp) {
+                    console.log('Initializing PlannerManager for habit-builder page');
+                    
+                    // Create a new PlannerManager instance
+                    const planner = new window.PlannerManager();
+                    
+                    // Set up date management
+                    const dateManager = new window.DateManager(planner);
+                    
+                    // Bind habit events
+                    try { 
+                        planner.bindHabitsEvents(); 
+                    } catch (err) { 
+                        console.warn('bindHabitsEvents failed', err); 
+                    }
+                    
+                    try { 
+                        planner.renderHabits(); 
+                    } catch (err) { 
+                        console.warn('renderHabits failed', err); 
+                    }
+                    
+                    // Make planner globally accessible
+                    window.plannerApp = planner;
+                    
+                    // Load today's plan
+                    await planner.loadPlan(window.formatDate ? window.formatDate(new Date()) : new Date().toISOString().split('T')[0]);
+                    
+                    console.log('Habit-builder page initialized successfully');
+                }
+            }, 100);
+        });
+    </script>
 </body>
 </html>

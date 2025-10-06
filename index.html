@@ -354,10 +354,14 @@
         // Make Firebase available globally
             window.firebase = { app, db, auth, googleProvider, updateProfile };
         
+            // Track if user was previously signed in to avoid reload loop on initial load
+            let wasUserSignedIn = false;
+        
             // Authentication state change handler
         onAuthStateChanged(auth, (user) => {
             if (user) {
                     console.log('User signed in:', user.uid, user.email);
+                    wasUserSignedIn = true;
                     updateAuthUI(user);
                     
                 // Initialize the app once user is authenticated
@@ -367,6 +371,28 @@
                 } else {
                     console.log('No user signed in');
                     updateAuthUI(null);
+                    
+                    // Only clear data and refresh if user was previously signed in (actual logout)
+                    if (wasUserSignedIn) {
+                        // Clear local data and reset app state when user logs out
+                        if (window.storage && window.storage.clearLocalData) {
+                            window.storage.clearLocalData();
+                            console.log('Local data cleared on logout');
+                        }
+                        
+                        // Reset to empty plan and re-render
+                        if (window.plannerApp && window.currentPlan) {
+                            window.currentPlan = window.getEmptyPlan();
+                            window.plannerApp.renderAll();
+                            console.log('App state reset on logout');
+                        }
+                        
+                        // Refresh the page to ensure clean UI state
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 100);
+                    }
+                    wasUserSignedIn = false;
                 }
             });
 

@@ -110,7 +110,13 @@ const storage = {
     this._firebaseReady = true;
     this._userId = userId;
     this._projectId = projectId;
-    console.log('Firebase storage initialized for user:', userId, 'in project:', projectId);
+    console.log('✅ Firebase storage initialized for user:', userId, 'in project:', projectId);
+    console.log('Storage state:', {
+      _firebaseReady: this._firebaseReady,
+      _userId: this._userId,
+      _projectId: this._projectId,
+      firebase: !!window.firebase
+    });
   },
 
   /**
@@ -229,21 +235,78 @@ const storage = {
       localStorage.setItem(`${page}:${dateStr}`, JSON.stringify(data));
       
       // Try Firebase if available
-      if (this._firebaseReady && this._userId && window.firebase) {
-        const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
-        const dataRef = ref(window.firebase.db, `projects/${this._projectId}/users/${this._userId}/${page}/${dateStr}`);
-        await set(dataRef, {
-          ...data,
-          lastUpdated: new Date().toISOString(),
-          userId: this._userId,
-          projectId: this._projectId,
-          page: page
-        });
-        console.log(`Saved ${page} to Firebase:`, dateStr);
+      if (this._firebaseReady && this._userId && window.firebase && window.firebase.db) {
+        console.log(`Attempting to save ${page} to Firebase for user projects/${this._projectId}/users/${this._userId} on ${dateStr}`);
+        console.log('Data to save:', data);
+        try {
+          const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+          const dataRef = ref(window.firebase.db, `projects/${this._projectId}/users/${this._userId}/${page}/${dateStr}`);
+          console.log('Firebase path:', `projects/${this._projectId}/users/${this._userId}/${page}/${dateStr}`);
+          await set(dataRef, {
+            ...data,
+            lastUpdated: new Date().toISOString(),
+            userId: this._userId,
+            projectId: this._projectId,
+            page: page
+          });
+          console.log(`✅ Successfully saved ${page} to Firebase:`, dateStr);
+        } catch (firebaseError) {
+          console.error(`❌ Firebase save error for ${page}:`, firebaseError);
+          throw firebaseError;
+        }
+      } else {
+        console.log(`Firebase not ready - _firebaseReady: ${this._firebaseReady}, _userId: projects/${this._projectId}/users/${this._userId}, firebase: ${!!window.firebase}`);
       }
     } catch (error) {
       console.error(`Error saving ${page} data:`, error);
       // localStorage backup already saved above
+    }
+  },
+
+  /**
+   * Clear all local data for the current user
+   */
+  clearLocalData() {
+    try {
+      const pages = ['planner', 'habits', 'expenses', 'work', 'pomodoro', 'userInfo'];
+      let totalCleared = 0;
+      
+      for (const page of pages) {
+        const keys = Object.keys(localStorage).filter(key => key.startsWith(`${page}:`));
+        
+        for (const key of keys) {
+          localStorage.removeItem(key);
+          totalCleared++;
+        }
+      }
+      
+      console.log('Cleared', totalCleared, 'items from localStorage');
+    } catch (error) {
+      console.error('Error clearing localStorage:', error);
+    }
+  },
+
+  /**
+   * Get data from Firebase only (no localStorage fallback)
+   */
+  async getFromFirebase(dateStr, page = 'planner') {
+    try {
+      if (this._firebaseReady && this._userId && window.firebase) {
+        const { ref, get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        const dataRef = ref(window.firebase.db, `projects/${this._projectId}/users/${this._userId}/${page}/${dateStr}`);
+        const snapshot = await get(dataRef);
+        
+        if (snapshot.exists()) {
+          console.log(`Loaded ${page} from Firebase:`, dateStr);
+          return snapshot.val();
+        }
+      }
+      
+      console.log(`No Firebase data found for ${page}:`, dateStr);
+      return null;
+    } catch (error) {
+      console.error(`Error loading ${page} from Firebase:`, error);
+      return null;
     }
   },
 
@@ -335,7 +398,11 @@ class PlannerManager {
    */
   async loadPlan(dateStr) {
     try {
-      const data = await storage.get(dateStr, 'planner');
+      const currentPage = getCurrentPage();
+      // When user is logged in, load from Firebase only (no localStorage fallback)
+      const data = storage._firebaseReady && storage._userId 
+        ? await storage.getFromFirebase(dateStr, currentPage)
+        : await storage.get(dateStr, currentPage);
       currentPlan = data || getEmptyPlan();
 
       // Normalize older/newer data shapes: ensure `habits` and `todos` are arrays
@@ -377,8 +444,9 @@ class PlannerManager {
    */
   async savePlan() {
     const dateStr = formatDate(currentDate);
-    await storage.set(dateStr, currentPlan, 'planner');
-    console.log(`Plan saved for ${dateStr}`);
+    const currentPage = getCurrentPage();
+    await storage.set(dateStr, currentPlan, currentPage);
+    console.log(`Plan saved for ${dateStr} to ${currentPage}`);
   }
 
   /**
@@ -1277,6 +1345,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.currentPlan = () => currentPlan;
     window.currentDate = () => currentDate;
     window.plannerApp = planner;
+    window.storage = storage;
+    window.getEmptyPlan = getEmptyPlan;
+    window.PlannerManager = PlannerManager;
+    window.DateManager = DateManager;
+    window.formatDate = formatDate;
     
     // Store app instance for Firebase initialization
     plannerApp = planner;
@@ -1335,10 +1408,10 @@ window.initWithFirebase = async function(userId) {
     // Initialize or update user info
     await storage.initializeUserInfo(userId);
     
-    // Sync existing localStorage data to Firebase
-    await storage.syncToFirebase();
+    // Clear local data to ensure we load from Firebase
+    storage.clearLocalData();
     
-    // Reload current plan to get Firebase data if available
+    // Load current plan from Firebase (or start fresh if no data exists)
     if (plannerApp) {
       await plannerApp.loadPlan(formatDate(currentDate));
     }
@@ -1603,6 +1676,9 @@ function initializeUserInfoDropdown() {
         
         console.log('✅ Profile updated successfully');
         alert('Profile updated successfully!');
+        
+        // Refresh the page to close the account info window
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error saving user info:', error);
@@ -1614,7 +1690,20 @@ function initializeUserInfoDropdown() {
     try {
       if (window.authFunctions?.signOut) {
         await window.authFunctions.signOut();
+        
+        // Clear local data to prevent data mixing between users
+        storage.clearLocalData();
+        
+        // Reset to empty plan
+        if (plannerApp) {
+          currentPlan = getEmptyPlan();
+          await plannerApp.render();
+        }
+        
         closeDropdown();
+        
+        // Refresh the page to ensure clean UI state
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error logging out:', error);
@@ -1753,6 +1842,9 @@ function initializeUserInfoDropdown() {
         
         console.log('✅ Profile updated successfully');
         alert('Profile updated successfully!');
+        
+        // Refresh the page to close the account info window
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error saving user info:', error);
@@ -1764,7 +1856,20 @@ function initializeUserInfoDropdown() {
     try {
       if (window.authFunctions?.signOut) {
         await window.authFunctions.signOut();
+        
+        // Clear local data to prevent data mixing between users
+        storage.clearLocalData();
+        
+        // Reset to empty plan
+        if (plannerApp) {
+          currentPlan = getEmptyPlan();
+          await plannerApp.render();
+        }
+        
         closeUserInfoMenu();
+        
+        // Refresh the page to ensure clean UI state
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error logging out:', error);
@@ -1847,6 +1952,7 @@ function initializeAuthHandlers() {
     signInBtn.addEventListener('click', () => {
       showAuthModal();
     });
+    
   }
 
   // Sign out button
@@ -1856,7 +1962,20 @@ function initializeAuthHandlers() {
       try {
         if (window.authFunctions) {
           await window.authFunctions.signOut();
+          
+          // Clear local data to prevent data mixing between users
+          storage.clearLocalData();
+          
+          // Reset to empty plan
+          if (plannerApp) {
+            currentPlan = getEmptyPlan();
+            await plannerApp.render();
+          }
+          
           announceStatus('Signed out successfully');
+          
+          // Refresh the page to ensure clean UI state
+          window.location.reload();
         }
       } catch (error) {
         console.error('Sign out error:', error);

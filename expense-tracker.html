@@ -173,14 +173,39 @@
     const cat = document.getElementById('expense-cat');
     const ADD_KEY = 'dailyplanner:expenses';
 
-    function loadExpenses(){
-      try{ return JSON.parse(localStorage.getItem(ADD_KEY))||[] }catch(e){return[]}
+    async function loadExpenses(){
+      try{ 
+        // Use storage adapter if available (Firebase + localStorage fallback)
+        if (window.storage) {
+          const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          const data = await window.storage.get(dateStr, 'expenses');
+          return data?.expenses || [];
+        } else {
+          // Fallback to direct localStorage
+          return JSON.parse(localStorage.getItem(ADD_KEY))||[];
+        }
+      }catch(e){return[]}
     }
 
-    function saveExpenses(arr){ localStorage.setItem(ADD_KEY, JSON.stringify(arr)); }
+    async function saveExpenses(arr){ 
+      try {
+        // Use storage adapter if available (Firebase + localStorage fallback)
+        if (window.storage) {
+          const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          await window.storage.set(dateStr, { expenses: arr }, 'expenses');
+        } else {
+          // Fallback to direct localStorage
+          localStorage.setItem(ADD_KEY, JSON.stringify(arr));
+        }
+      } catch(e) {
+        console.error('Error saving expenses:', e);
+        // Fallback to direct localStorage
+        localStorage.setItem(ADD_KEY, JSON.stringify(arr));
+      }
+    }
 
-    function render(){
-      const items = loadExpenses();
+    async function render(){
+      const items = await loadExpenses();
       listEl.innerHTML = '';
       let total = 0;
       items.forEach((it,idx)=>{
@@ -195,15 +220,15 @@
 
     function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
 
-    document.getElementById('add-expense').addEventListener('click', ()=>{
+    document.getElementById('add-expense').addEventListener('click', async ()=>{
       const d=desc.value.trim(); const a=Number(amount.value||0); const c=cat.value.trim();
       if(!d||!a) return;
-      const arr = loadExpenses(); arr.push({desc:d,amount:a,cat:c||''}); saveExpenses(arr); desc.value=''; amount.value=''; cat.value=''; render();
+      const arr = await loadExpenses(); arr.push({desc:d,amount:a,cat:c||''}); await saveExpenses(arr); desc.value=''; amount.value=''; cat.value=''; await render();
     });
 
-    document.getElementById('clear-expenses').addEventListener('click', ()=>{ if(confirm('Clear all expenses?')){ saveExpenses([]); render(); } });
+    document.getElementById('clear-expenses').addEventListener('click', async ()=>{ if(confirm('Clear all expenses?')){ await saveExpenses([]); await render(); } });
 
-    listEl.addEventListener('click', (e)=>{ if(e.target.dataset.idx){ const i=Number(e.target.dataset.idx); const arr=loadExpenses(); arr.splice(i,1); saveExpenses(arr); render(); } });
+    listEl.addEventListener('click', async (e)=>{ if(e.target.dataset.idx){ const i=Number(e.target.dataset.idx); const arr=await loadExpenses(); arr.splice(i,1); await saveExpenses(arr); await render(); } });
 
     render();
 
@@ -363,14 +388,45 @@
     // Make Firebase available globally
     window.firebase = { app, db, auth, googleProvider, updateProfile };
     
+    // Track if user was previously signed in to avoid reload loop on initial load
+    let wasUserSignedIn = false;
+    
     // Authentication state change handler
     onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('User signed in:', user.uid, user.email);
-        updateAuthUI(user);
+            if (user) {
+                console.log('User signed in:', user.uid, user.email);
+                wasUserSignedIn = true;
+                updateAuthUI(user);
+                
+                // Initialize Firebase storage
+                if (window.initWithFirebase) {
+                    window.initWithFirebase(user.uid);
+                }
       } else {
         console.log('No user signed in');
         updateAuthUI(null);
+        
+        // Only clear data and refresh if user was previously signed in (actual logout)
+        if (wasUserSignedIn) {
+          // Clear local data and reset app state when user logs out
+          if (window.storage && window.storage.clearLocalData) {
+            window.storage.clearLocalData();
+            console.log('Local data cleared on logout');
+          }
+          
+          // Reset to empty plan and re-render
+          if (window.plannerApp && window.currentPlan) {
+            window.currentPlan = window.getEmptyPlan();
+            window.plannerApp.renderAll();
+            console.log('App state reset on logout');
+          }
+          
+          // Refresh the page to ensure clean UI state
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
+        }
+        wasUserSignedIn = false;
       }
     });
 
@@ -654,7 +710,7 @@
         const mobileUserEmail = document.getElementById('mobile-user-email');
         
         // Check if user is actually signed in by checking Firebase auth state
-        if (auth.currentUser) {
+        if (window.firebase && window.firebase.auth && window.firebase.auth.currentUser) {
           console.log('Fallback: User is signed in, updating UI...');
           if (signInBtn) signInBtn.style.display = 'none';
           if (signOutBtn) signOutBtn.style.display = 'none';
