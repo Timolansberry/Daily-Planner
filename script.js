@@ -271,6 +271,7 @@ const storage = {
       const pages = ['planner', 'habits', 'expenses', 'work', 'pomodoro', 'userInfo'];
       let totalCleared = 0;
       
+      // Clear page-specific data
       for (const page of pages) {
         const keys = Object.keys(localStorage).filter(key => key.startsWith(`${page}:`));
         
@@ -280,7 +281,34 @@ const storage = {
         }
       }
       
-      console.log('Cleared', totalCleared, 'items from localStorage');
+      // Clear work page specific data
+      const workKeys = ['dailyplanner:worktasks', 'dailyplanner:dailyduties'];
+      for (const key of workKeys) {
+        if (localStorage.getItem(key)) {
+          localStorage.removeItem(key);
+          totalCleared++;
+        }
+      }
+      
+      // Clear any other daily planner related data
+      const allKeys = Object.keys(localStorage);
+      const dailyPlannerKeys = allKeys.filter(key => 
+        key.includes('dailyplanner') || 
+        key.includes('daily-planner') ||
+        key.startsWith('planner:') ||
+        key.startsWith('habits:') ||
+        key.startsWith('expenses:') ||
+        key.startsWith('work:') ||
+        key.startsWith('pomodoro:')
+      );
+      
+      for (const key of dailyPlannerKeys) {
+        localStorage.removeItem(key);
+        totalCleared++;
+      }
+      
+      console.log('✅ Cleared', totalCleared, 'items from localStorage');
+      console.log('Local data cleared for clean Firebase-only experience');
     } catch (error) {
       console.error('Error clearing localStorage:', error);
     }

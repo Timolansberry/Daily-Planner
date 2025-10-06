@@ -306,12 +306,21 @@
       try{
         if (window.storage) {
           const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          console.log('Loading daily duties for date:', dateStr);
           const data = await window.storage.get(dateStr, 'work');
-          return data?.dailyDuties || [];
+          console.log('Loaded work data:', data);
+          const duties = data?.dailyDuties || [];
+          console.log('Returning daily duties:', duties);
+          return duties;
         } else {
-          return JSON.parse(localStorage.getItem(DAILY_DUTIES_KEY))||[];
+          const localData = JSON.parse(localStorage.getItem(DAILY_DUTIES_KEY))||[];
+          console.log('Using localStorage fallback for duties:', localData);
+          return localData;
         }
-      }catch(e){return[]}
+      }catch(e){
+        console.error('Error loading daily duties:', e);
+        return [];
+      }
     }
     
     async function saveDailyDuties(a){ 
@@ -612,6 +621,16 @@
 
     render();
     renderDailyDuties();
+    
+    // Re-render if user is already signed in (for when page loads with existing auth)
+    setTimeout(async () => {
+      if (window.firebase && window.firebase.auth && window.firebase.auth.currentUser) {
+        console.log('User already signed in, re-rendering duties and tasks');
+        await renderDailyDuties();
+        await render();
+        await renderDueSections();
+      }
+    }, 1000);
 
     // Format date to YYYY-MM-DD string using local timezone
     function formatDate(date) {
@@ -642,6 +661,14 @@
       const datePicker = document.getElementById('date-picker');
       const weekdayBtns = document.querySelectorAll('.weekday-btn');
       let currentDate = new Date();
+
+      // Format date to YYYY-MM-DD string using local timezone
+      function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
 
       // Get weekday number (0 = Sunday, 1 = Monday, etc.)
       function getWeekday(date) {
@@ -858,10 +885,24 @@
                 wasUserSignedIn = true;
                 updateAuthUI(user);
                 
+                // Clear local data to ensure clean Firebase-only experience
+                if (window.storage && window.storage.clearLocalData) {
+                    window.storage.clearLocalData();
+                    console.log('Local data cleared on login');
+                }
+                
                 // Initialize Firebase storage
                 if (window.initWithFirebase) {
                     window.initWithFirebase(user.uid);
                 }
+                
+                // Re-render duties and tasks after Firebase initialization
+                setTimeout(async () => {
+                    console.log('Re-rendering duties and tasks after Firebase init');
+                    await renderDailyDuties();
+                    await render();
+                    await renderDueSections();
+                }, 500);
       } else {
         console.log('No user signed in');
         updateAuthUI(null);

@@ -178,13 +178,22 @@
         // Use storage adapter if available (Firebase + localStorage fallback)
         if (window.storage) {
           const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          console.log('Loading expenses for date:', dateStr);
           const data = await window.storage.get(dateStr, 'expenses');
-          return data?.expenses || [];
+          console.log('Loaded expenses data:', data);
+          const expenses = data?.expenses || [];
+          console.log('Returning expenses:', expenses);
+          return expenses;
         } else {
           // Fallback to direct localStorage
-          return JSON.parse(localStorage.getItem(ADD_KEY))||[];
+          const localData = JSON.parse(localStorage.getItem(ADD_KEY))||[];
+          console.log('Using localStorage fallback:', localData);
+          return localData;
         }
-      }catch(e){return[]}
+      }catch(e){
+        console.error('Error loading expenses:', e);
+        return [];
+      }
     }
 
     async function saveExpenses(arr){ 
@@ -230,7 +239,16 @@
 
     listEl.addEventListener('click', async (e)=>{ if(e.target.dataset.idx){ const i=Number(e.target.dataset.idx); const arr=await loadExpenses(); arr.splice(i,1); await saveExpenses(arr); await render(); } });
 
+    // Initial render
     render();
+    
+    // Re-render if user is already signed in (for when page loads with existing auth)
+    setTimeout(async () => {
+      if (window.firebase && window.firebase.auth && window.firebase.auth.currentUser) {
+        console.log('User already signed in, re-rendering expenses');
+        await render();
+      }
+    }, 1000);
 
     // Date picker and weekday functionality
     (function() {
@@ -398,10 +416,22 @@
                 wasUserSignedIn = true;
                 updateAuthUI(user);
                 
+                // Clear local data to ensure clean Firebase-only experience
+                if (window.storage && window.storage.clearLocalData) {
+                    window.storage.clearLocalData();
+                    console.log('Local data cleared on login');
+                }
+                
                 // Initialize Firebase storage
                 if (window.initWithFirebase) {
                     window.initWithFirebase(user.uid);
                 }
+                
+                // Re-render expenses after Firebase initialization
+                setTimeout(async () => {
+                    console.log('Re-rendering expenses after Firebase init');
+                    await render();
+                }, 500);
       } else {
         console.log('No user signed in');
         updateAuthUI(null);

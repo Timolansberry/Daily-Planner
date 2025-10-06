@@ -364,6 +364,12 @@
                     wasUserSignedIn = true;
                     updateAuthUI(user);
                     
+                // Clear local data to ensure clean Firebase-only experience
+                if (window.storage && window.storage.clearLocalData) {
+                    window.storage.clearLocalData();
+                    console.log('Local data cleared on login');
+                }
+                
                 // Initialize the app once user is authenticated
                 if (window.initWithFirebase) {
                     window.initWithFirebase(user.uid);
