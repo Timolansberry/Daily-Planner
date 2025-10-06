@@ -1394,6 +1394,12 @@ function initializeUserInfoDropdown() {
   if (mobileUserEmail && userInfoMenu) {
     mobileUserEmail.addEventListener('click', (e) => {
       e.stopPropagation();
+      
+      // Close the right side navigation menu if it's open
+      if (window.closeMobileMenu) {
+        window.closeMobileMenu();
+      }
+      
       openUserInfoMenu();
     });
   }
@@ -1710,6 +1716,9 @@ function initializeUserInfoDropdown() {
       userInfoMenuBackdrop.classList.remove('show');
     }
   }
+
+  // Make closeUserInfoMenu available globally
+  window.closeUserInfoMenu = closeUserInfoMenu;
   
   async function loadUserInfoToMenu() {
     try {

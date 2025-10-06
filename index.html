@@ -144,6 +144,11 @@
                         const openLocal = header.classList.toggle('nav-open');
                         const openGlobal = root.classList.toggle('nav-open');
                         btn.setAttribute('aria-expanded', String(openLocal || openGlobal));
+                        
+                        // Close user info menu if it's open
+                        if (window.closeUserInfoMenu) {
+                            window.closeUserInfoMenu();
+                        }
                     });
 
                     // Close when clicking a link
