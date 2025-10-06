@@ -14,7 +14,7 @@
         <header class="header">
             <!-- Mobile User Profile Icon - Left side next to hamburger -->
             <div class="mobile-user-profile-icon">
-                <div id="mobile-user-email" class="mobile-user-email" style="display: none;"></div>
+                <div id="mobile-user-email" class="mobile-user-email"></div>
             </div>
             
             <!-- User Info Menu - Slides from left -->
@@ -347,13 +347,20 @@
 
         // Authentication UI management
         function updateAuthUI(user) {
+            console.log('updateAuthUI called with user:', user);
             const signInBtn = document.getElementById('sign-in-btn');
             const signOutBtn = document.getElementById('sign-out-btn');
             const userEmail = document.getElementById('user-email');
+            const mobileUserEmail = document.getElementById('mobile-user-email');
             const authModal = document.getElementById('auth-modal');
+            const userInfoDropdown = document.getElementById('user-info-dropdown');
+            const userInfoMenu = document.getElementById('user-info-menu');
+
+            console.log('Auth elements found:', { signInBtn, signOutBtn, userEmail, mobileUserEmail, authModal });
 
             if (user) {
                 // User is signed in
+                console.log('User is signed in, updating UI...');
                 if (signInBtn) signInBtn.style.display = 'none';
                 if (signOutBtn) signOutBtn.style.display = 'none'; // Hide sign out button
                 if (userEmail) {
@@ -361,16 +368,203 @@
                     userEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
                     userEmail.style.display = 'block';
                 }
+                if (mobileUserEmail) {
+                    // Show person icon in mobile nav
+                    mobileUserEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                    mobileUserEmail.style.display = 'block';
+                }
                 if (authModal) authModal.style.display = 'none';
+                
+                // Hide account info sections initially (they'll be shown when user clicks the person icon)
+                if (userInfoDropdown) userInfoDropdown.style.display = 'none';
+                if (userInfoMenu) userInfoMenu.style.display = 'none';
+                
+                // Restore account info content for signed in users
+                restoreAccountInfoForSignedInUser();
             } else {
                 // User is not signed in
+                console.log('User is not signed in, showing sign in button...');
                 if (signInBtn) signInBtn.style.display = 'block';
                 if (signOutBtn) signOutBtn.style.display = 'none';
                 if (userEmail) {
                     userEmail.textContent = '';
                     userEmail.style.display = 'none';
                 }
+                if (mobileUserEmail) {
+                    // Always show mobile user profile icon on mobile devices, even when not signed in
+                    mobileUserEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                    mobileUserEmail.style.display = 'block';
+                }
+                
+                // Hide account info sections when user is not signed in
+                if (userInfoDropdown) userInfoDropdown.style.display = 'none';
+                if (userInfoMenu) userInfoMenu.style.display = 'none';
+                
+                // Show sign-in/sign-up content in account info section
+                updateAccountInfoForSignedOutUser();
             }
+        }
+
+        // Restore account info content for signed in users
+        function restoreAccountInfoForSignedInUser() {
+            const userInfoDropdown = document.getElementById('user-info-dropdown');
+            const userInfoMenu = document.getElementById('user-info-menu');
+            
+            if (userInfoDropdown) {
+                // Restore the original account info content
+                const header = userInfoDropdown.querySelector('.user-info-header h3');
+                const content = userInfoDropdown.querySelector('.user-info-content');
+                const actions = userInfoDropdown.querySelector('.user-info-actions');
+                
+                if (header) header.textContent = 'Account Information';
+                if (content) {
+                    content.innerHTML = `
+                        <div class="info-row">
+                            <label>Email:</label>
+                            <span id="dropdown-email">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>User Name:</label>
+                            <input type="text" id="dropdown-display-name" class="dropdown-input" placeholder="Enter name">
+                        </div>
+                        <div class="info-row">
+                            <label>Account Created:</label>
+                            <span id="dropdown-created">Loading...</span>
+                        </div>
+                    `;
+                }
+                if (actions) actions.style.display = 'block';
+            }
+            
+            if (userInfoMenu) {
+                // Same for mobile menu
+                const header = userInfoMenu.querySelector('.user-info-menu-header h3');
+                const content = userInfoMenu.querySelector('.user-info-menu-content');
+                const actions = userInfoMenu.querySelector('.user-info-menu-actions');
+                
+                if (header) header.textContent = 'Account Information';
+                if (content) {
+                    content.innerHTML = `
+                        <div class="info-row">
+                            <label>Email:</label>
+                            <span id="menu-email">Loading...</span>
+                        </div>
+                        <div class="info-row">
+                            <label>User Name:</label>
+                            <input type="text" id="menu-display-name" class="menu-input" placeholder="Enter name">
+                        </div>
+                        <div class="info-row">
+                            <label>Account Created:</label>
+                            <span id="menu-created">Loading...</span>
+                        </div>
+                    `;
+                }
+                if (actions) actions.style.display = 'block';
+            }
+        }
+
+        // Update account info section for signed out users
+        function updateAccountInfoForSignedOutUser() {
+            const userInfoDropdown = document.getElementById('user-info-dropdown');
+            const userInfoMenu = document.getElementById('user-info-menu');
+            
+            if (userInfoDropdown) {
+                // Replace the account info content with sign-in/sign-up options
+                const header = userInfoDropdown.querySelector('.user-info-header h3');
+                const content = userInfoDropdown.querySelector('.user-info-content');
+                const actions = userInfoDropdown.querySelector('.user-info-actions');
+                
+                if (header) header.textContent = 'Sign In / Sign Up';
+                if (content) {
+                    content.innerHTML = `
+                        <div class="auth-options">
+                            <p>Please sign in to access your account information and sync your data across devices.</p>
+                            <div class="auth-buttons">
+                                <button type="button" id="dropdown-signin-btn" class="dropdown-signin-btn">Sign In</button>
+                                <button type="button" id="dropdown-signup-btn" class="dropdown-signup-btn">Sign Up</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (actions) actions.style.display = 'none';
+            }
+            
+            if (userInfoMenu) {
+                // Same for mobile menu
+                const header = userInfoMenu.querySelector('.user-info-menu-header h3');
+                const content = userInfoMenu.querySelector('.user-info-menu-content');
+                const actions = userInfoMenu.querySelector('.user-info-menu-actions');
+                
+                if (header) header.textContent = 'Sign In / Sign Up';
+                if (content) {
+                    content.innerHTML = `
+                        <div class="auth-options">
+                            <p>Please sign in to access your account information and sync your data across devices.</p>
+                            <div class="auth-buttons">
+                                <button type="button" id="menu-signin-btn" class="menu-signin-btn">Sign In</button>
+                                <button type="button" id="menu-signup-btn" class="menu-signup-btn">Sign Up</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (actions) actions.style.display = 'none';
+            }
+            
+            // Add event listeners for the new buttons
+            addAuthButtonListeners();
+        }
+        
+        // Function to close mobile menu
+        function closeMobileMenu() {
+            const header = document.querySelector('.header');
+            const root = document.documentElement;
+            const toggle = document.getElementById('nav-toggle');
+            
+            if (header) header.classList.remove('nav-open');
+            if (root) root.classList.remove('nav-open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        }
+        
+        // Make closeMobileMenu available globally
+        window.closeMobileMenu = closeMobileMenu;
+        
+        // Add event listeners for auth buttons in account info sections
+        let authButtonListenersAdded = false;
+        function addAuthButtonListeners() {
+            // Only add listeners once to avoid duplicates
+            if (authButtonListenersAdded) return;
+            authButtonListenersAdded = true;
+            
+            // Use event delegation to handle dynamically created buttons
+            document.addEventListener('click', (e) => {
+                // Handle desktop dropdown buttons
+                if (e.target && e.target.id === 'dropdown-signin-btn') {
+                    e.preventDefault();
+                    switchAuthTab('signin');
+                    showAuthModal();
+                }
+                
+                if (e.target && e.target.id === 'dropdown-signup-btn') {
+                    e.preventDefault();
+                    switchAuthTab('signup');
+                    showAuthModal();
+                }
+                
+                // Handle mobile menu buttons (close menu when clicked)
+                if (e.target && e.target.id === 'menu-signin-btn') {
+                    e.preventDefault();
+                    closeMobileMenu(); // Close mobile menu first
+                    switchAuthTab('signin');
+                    showAuthModal();
+                }
+                
+                if (e.target && e.target.id === 'menu-signup-btn') {
+                    e.preventDefault();
+                    closeMobileMenu(); // Close mobile menu first
+                    switchAuthTab('signup');
+                    showAuthModal();
+                }
+            });
         }
 
         // Authentication functions
@@ -428,6 +622,7 @@
             const signInBtn = document.getElementById('sign-in-btn');
             const signOutBtn = document.getElementById('sign-out-btn');
             const userEmail = document.getElementById('user-email');
+            const mobileUserEmail = document.getElementById('mobile-user-email');
             
             // Check if user is actually signed in by checking Firebase auth state
             if (auth.currentUser) {
@@ -439,11 +634,21 @@
                     userEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
                     userEmail.style.display = 'block';
                 }
+                if (mobileUserEmail) {
+                    // Show person icon in mobile nav
+                    mobileUserEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                    mobileUserEmail.style.display = 'block';
+                }
             } else {
                 console.log('Fallback: No user signed in, showing sign-in button');
                 if (signInBtn) signInBtn.style.display = 'block';
                 if (signOutBtn) signOutBtn.style.display = 'none';
                 if (userEmail) userEmail.style.display = 'none';
+                if (mobileUserEmail) {
+                    // Always show mobile user profile icon on mobile devices, even when not signed in
+                    mobileUserEmail.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+                    mobileUserEmail.style.display = 'block';
+                }
             }
         }, 1000);
     </script>

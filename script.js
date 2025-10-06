@@ -1475,12 +1475,93 @@ function initializeUserInfoDropdown() {
   function openDropdown() {
     userInfoDropdown.style.display = 'block';
     isDropdownOpen = true;
-    loadUserInfoToDropdown();
+    
+    // Check if user is authenticated
+    const user = window.firebase?.auth?.currentUser;
+    if (user) {
+      loadUserInfoToDropdown();
+    } else {
+      // User is not authenticated, show sign-in/sign-up content
+      updateAccountInfoForSignedOutUser();
+    }
   }
   
   function closeDropdown() {
     userInfoDropdown.style.display = 'none';
     isDropdownOpen = false;
+  }
+  
+  // Update account info section for signed out users (accessible from script.js)
+  window.updateAccountInfoForSignedOutUser = function() {
+    if (userInfoDropdown) {
+      // Replace the account info content with sign-in/sign-up options
+      const header = userInfoDropdown.querySelector('.user-info-header h3');
+      const content = userInfoDropdown.querySelector('.user-info-content');
+      const actions = userInfoDropdown.querySelector('.user-info-actions');
+      
+      if (header) header.textContent = 'Sign In / Sign Up';
+      if (content) {
+        content.innerHTML = `
+          <div class="auth-options">
+            <p>Please sign in to access your account information and sync your data across devices.</p>
+            <div class="auth-buttons">
+              <button type="button" id="dropdown-signin-btn" class="dropdown-signin-btn">Sign In</button>
+              <button type="button" id="dropdown-signup-btn" class="dropdown-signup-btn">Sign Up</button>
+            </div>
+          </div>
+        `;
+      }
+      if (actions) actions.style.display = 'none';
+    }
+    
+    // Add event listeners for the new buttons
+    addAuthButtonListeners();
+  };
+  
+  // Use the global closeMobileMenu function
+  function closeMobileMenu() {
+    if (window.closeMobileMenu) {
+      window.closeMobileMenu();
+    }
+  }
+  
+  // Add event listeners for auth buttons in account info sections
+  let authButtonListenersAdded = false;
+  function addAuthButtonListeners() {
+    // Only add listeners once to avoid duplicates
+    if (authButtonListenersAdded) return;
+    authButtonListenersAdded = true;
+    
+    // Use event delegation to handle dynamically created buttons
+    document.addEventListener('click', (e) => {
+      // Handle desktop dropdown buttons
+      if (e.target && e.target.id === 'dropdown-signin-btn') {
+        e.preventDefault();
+        switchAuthTab('signin');
+        showAuthModal();
+      }
+      
+      if (e.target && e.target.id === 'dropdown-signup-btn') {
+        e.preventDefault();
+        switchAuthTab('signup');
+        showAuthModal();
+      }
+      
+      // Handle mobile menu buttons (close menu when clicked)
+      if (e.target && e.target.id === 'menu-signin-btn') {
+        e.preventDefault();
+        closeMobileMenu(); // Close mobile menu first
+        switchAuthTab('signin');
+        showAuthModal();
+      }
+      
+      if (e.target && e.target.id === 'menu-signup-btn') {
+        e.preventDefault();
+        closeMobileMenu(); // Close mobile menu first
+        switchAuthTab('signup');
+        showAuthModal();
+      }
+    });
   }
   
           async function loadUserInfoToDropdown() {

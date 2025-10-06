@@ -122,6 +122,11 @@ body {
   display: none; /* Hidden by default, shown on mobile */
 }
 
+/* Always show mobile user profile icon on mobile devices */
+.mobile-user-email {
+  display: none; /* Hidden by default, will be shown by JavaScript on mobile */
+}
+
 /* Hamburger / responsive nav for small screens */
 .nav-toggle {
   display: inline-flex;
@@ -219,6 +224,11 @@ body {
     top: 0.6rem;
     left: 0.6rem;
     z-index: 1300;
+  }
+  
+  /* Always show mobile user email/profile icon on mobile devices */
+  .mobile-user-email {
+    display: block !important;
   }
   
   /* Show user info menu on mobile */
@@ -2515,9 +2525,10 @@ body {
   }
   
   .user-info-menu-actions {
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
     gap: 0.75rem;
+    align-items: stretch;
   }
   
   .menu-save-btn {
@@ -2674,6 +2685,63 @@ body {
   background: white;
 }
 
+/* Auth Options in Account Info */
+.auth-options {
+  padding: 20px;
+  text-align: center;
+}
+
+.auth-options p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.dropdown-signin-btn,
+.dropdown-signup-btn,
+.menu-signin-btn,
+.menu-signup-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.dropdown-signin-btn,
+.menu-signin-btn {
+  background: var(--primary);
+  color: white;
+}
+
+.dropdown-signin-btn:hover,
+.menu-signin-btn:hover {
+  background: var(--primary-hover);
+}
+
+.dropdown-signup-btn,
+.menu-signup-btn {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+.dropdown-signup-btn:hover,
+.menu-signup-btn:hover {
+  background: var(--primary);
+  color: white;
+}
+
 /* User Info Dropdown Styles */
 .user-info-dropdown {
   position: absolute;
@@ -2749,9 +2817,10 @@ body {
 .user-info-actions {
   padding: 16px 20px;
   border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
   gap: 8px;
+  align-items: stretch;
 }
 
 .save-user-info-btn {
