@@ -1167,15 +1167,21 @@ body {
 .time-start { background: var(--accent); color: var(--bg); border-color: var(--accent); box-shadow:0 6px 14px rgba(0,179,255,0.12); }
 .time-reset { background: transparent; border:1px solid var(--border); color: var(--muted); }
 
-.controls { display:flex; gap:var(--space-3); justify-content:center; }
+.controls { display:flex; gap:var(--space-3); justify-content:center; margin-bottom: var(--space-2); }
+
+.time-reset {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  min-width: auto;
+}
 
 /* Settings gear icon */
 .settings-gear-btn {
   position: absolute;
-  bottom: var(--space-4);
-  left: var(--space-4);
-  width: 44px;
-  height: 44px;
+  bottom: var(--space-6);
+  left: var(--space-3);
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1202,10 +1208,10 @@ body {
 /* Hamburger menu icon */
 .hamburger-menu-btn {
   position: absolute;
-  bottom: var(--space-4);
-  right: var(--space-4);
-  width: 44px;
-  height: 44px;
+  bottom: var(--space-6);
+  right: var(--space-3);
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2216,7 +2222,7 @@ body {
   .clock {
     position: relative;
     margin-top: 0;
-    padding: var(--space-6) var(--space-4);
+    padding: 0 var(--space-4) var(--space-6) var(--space-4);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
