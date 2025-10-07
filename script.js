@@ -1175,7 +1175,12 @@ class DateManager {
     this.datePicker = document.getElementById('date-picker');
     this.weekdayBtns = document.querySelectorAll('.weekday-btn');
     
-    this.init();
+    // Only initialize if we're on a page that has the calendar elements
+    if (this.datePicker && this.weekdayBtns.length > 0) {
+      this.init();
+    } else {
+      console.log('[DateManager] Calendar elements not found - skipping initialization');
+    }
   }
 
   init() {
@@ -1199,6 +1204,8 @@ class DateManager {
   }
 
   updateWeekdayButtons() {
+    if (!this.weekdayBtns || this.weekdayBtns.length === 0) return;
+    
     const currentWeekday = getWeekday(currentDate);
     
     this.weekdayBtns.forEach(btn => {
@@ -1208,6 +1215,8 @@ class DateManager {
   }
 
   goToWeekday(targetDay) {
+    if (!this.datePicker) return;
+    
     const currentWeekday = getWeekday(currentDate);
     const diff = targetDay - currentWeekday;
     

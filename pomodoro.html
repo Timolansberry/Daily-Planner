@@ -98,28 +98,6 @@
       </div>
     </nav>
     </header>
-    <section class="calendar-section">
-      <div class="calendar-top">
-        <div class="date-controls">
-          <div class="date-input-row">
-            <label for="date-picker" class="sr-only">Select date</label>
-            <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
-          </div>
-        </div>
-      </div>
-
-      <div class="calendar-bottom">
-        <div class="weekday-toggles" role="group" aria-label="Weekday selection">
-          <button type="button" class="weekday-btn" data-day="1">M</button>
-          <button type="button" class="weekday-btn" data-day="2">T</button>
-          <button type="button" class="weekday-btn" data-day="3">W</button>
-          <button type="button" class="weekday-btn" data-day="4">T</button>
-          <button type="button" class="weekday-btn" data-day="5">F</button>
-          <button type="button" class="weekday-btn" data-day="6">S</button>
-          <button type="button" class="weekday-btn" data-day="0">S</button>
-        </div>
-      </div>
-    </section>
     <!-- Pomodoro clock UI -->
     <div class="clock" aria-label="Pomodoro clock">
       <div class="timer">
@@ -129,12 +107,14 @@
             <circle class="progress-bg" cx="50" cy="50" r="44" fill="none" stroke-width="6"></circle>
             <circle id="progress-circle" class="progress-fg session" cx="50" cy="50" r="44" fill="none" stroke-width="6" stroke-linecap="round" stroke-dasharray="276.46" stroke-dashoffset="276.46"></circle>
           </svg>
-          <div id="main-display" class="main-display">25:00</div>
+          <div id="main-display" class="main-display">
+            <div class="time-text">25:00</div>
+            <div class="status-text">FOCUS</div>
+            <button class="btn internal-start-btn" id="time-start" aria-pressed="false">
+              <span class="play-icon">▶</span>
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div class="session-info">
-        <div class="session-count"><h2>Pomodoro</h2></div>
       </div>
 
       <div class="settings">
@@ -157,8 +137,52 @@
       </div>
 
       <div class="controls">
-        <button class="btn time-start" id="time-start" aria-pressed="false">Start</button>
         <button class="btn time-reset" id="time-reset">Reset</button>
+      </div>
+      
+      <!-- Settings gear icon -->
+      <button class="settings-gear-btn" id="settings-gear" aria-label="Open settings">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+      
+      <!-- Hamburger menu icon -->
+      <button class="hamburger-menu-btn" id="hamburger-menu" aria-label="Open navigation menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      
+      <!-- Settings modal -->
+      <div id="settings-modal" class="settings-modal" style="display: none;">
+        <div class="settings-modal-content">
+          <div class="settings-modal-header">
+            <h3>Timer Settings</h3>
+            <button class="settings-close-btn" id="settings-close" aria-label="Close settings">×</button>
+          </div>
+          <div class="settings-content">
+            <div class="setting-group">
+              <label>Session Duration</label>
+              <div class="time-controls">
+                <button class="btn small minus" id="sess-minus" aria-label="Decrease session">-</button>
+                <span class="time-display" id="session-display">25 min</span>
+                <button class="btn small plus" id="sess-plus" aria-label="Increase session">+</button>
+              </div>
+            </div>
+            <div class="setting-group">
+              <label>Break Duration</label>
+              <div class="time-controls">
+                <button class="btn small minus" id="break-minus" aria-label="Decrease break">-</button>
+                <span class="time-display" id="break-display">5 min</span>
+                <button class="btn small plus" id="break-plus" aria-label="Increase break">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -213,9 +237,25 @@
         }
 
         function render(){
-          displayEl.textContent = formatTime(remaining);
-          sessDisplay.textContent = `${sessionMinutes} min`;
-          breakDisplay.textContent = `${breakMinutes} min`;
+          // Update time display
+          const timeText = displayEl.querySelector('.time-text');
+          if (timeText) timeText.textContent = formatTime(remaining);
+          
+          // Update status text
+          const statusText = displayEl.querySelector('.status-text');
+          if (statusText) statusText.textContent = isBreak ? 'BREAK' : 'FOCUS';
+          
+          // Update play/pause button
+          const playIcon = document.querySelector('.play-icon');
+          if (playIcon) {
+            playIcon.textContent = isRunning ? '⏸' : '▶';
+          }
+          
+          // Update settings modal displays
+          const sessionDisplay = document.getElementById('session-display');
+          const breakDisplay = document.getElementById('break-display');
+          if (sessionDisplay) sessionDisplay.textContent = `${sessionMinutes} min`;
+          if (breakDisplay) breakDisplay.textContent = `${breakMinutes} min`;
           const total = (isBreak ? breakMinutes*60 : sessionMinutes*60);
           const pct = Math.max(0, Math.min(100, ((total - remaining)/total) * 100));
           // update SVG stroke-dashoffset for smooth animation
@@ -224,7 +264,7 @@
             const radius = Number(r);
             const circumference = 2 * Math.PI * radius;
             const offset = circumference * (1 - pct / 100);
-            progressEl.style.transition = 'stroke-dashoffset 0.4s linear';
+            // Use CSS transition instead of inline style for smoother animation
             progressEl.style.strokeDasharray = `${circumference}`;
             progressEl.style.strokeDashoffset = `${offset}`;
             progressEl.classList.toggle('break', isBreak);
@@ -246,16 +286,16 @@
         function start(){
           if(isRunning) return;
           isRunning = true;
-          startBtn.textContent = 'Pause';
           startBtn.setAttribute('aria-pressed','true');
           timerId = setInterval(tick, 1000);
+          render(); // Update the button icon immediately
         }
         function pause(){
           if(!isRunning) return;
           isRunning = false;
-          startBtn.textContent = 'Start';
           startBtn.setAttribute('aria-pressed','false');
           clearInterval(timerId);
+          render(); // Update the button icon immediately
         }
         function reset(){
           pause();
@@ -292,65 +332,39 @@
           render();
         });
 
+        // Settings modal functionality
+        const settingsGear = document.getElementById('settings-gear');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsClose = document.getElementById('settings-close');
+        
+        settingsGear.addEventListener('click', () => {
+          settingsModal.style.display = 'flex';
+        });
+        
+        settingsClose.addEventListener('click', () => {
+          settingsModal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside
+        settingsModal.addEventListener('click', (e) => {
+          if (e.target === settingsModal) {
+            settingsModal.style.display = 'none';
+          }
+        });
+        
+        // Hamburger menu functionality
+        const hamburgerMenu = document.getElementById('hamburger-menu');
+        const navToggle = document.getElementById('nav-toggle');
+        
+        hamburgerMenu.addEventListener('click', () => {
+          // Trigger the existing navigation toggle
+          if (navToggle) {
+            navToggle.click();
+          }
+        });
+
         // initial render
         render();
-      })();
-
-      // Date picker and weekday functionality
-      (function() {
-        const datePicker = document.getElementById('date-picker');
-        const weekdayBtns = document.querySelectorAll('.weekday-btn');
-        let currentDate = new Date();
-
-        // Format date to YYYY-MM-DD string
-        function formatDate(date) {
-          return date.toISOString().split('T')[0];
-        }
-
-        // Get weekday number (0 = Sunday, 1 = Monday, etc.)
-        function getWeekday(date) {
-          return date.getDay();
-        }
-
-        // Update weekday buttons to show current day
-        function updateWeekdayButtons() {
-          const currentWeekday = getWeekday(currentDate);
-          
-          weekdayBtns.forEach(btn => {
-            const day = parseInt(btn.dataset.day);
-            btn.classList.toggle('active', day === currentWeekday);
-          });
-        }
-
-        // Go to specific weekday
-        function goToWeekday(targetDay) {
-          const currentWeekday = getWeekday(currentDate);
-          const diff = targetDay - currentWeekday;
-          
-          currentDate.setDate(currentDate.getDate() + diff);
-          datePicker.value = formatDate(currentDate);
-          updateWeekdayButtons();
-        }
-
-        // Initialize
-        if (datePicker) {
-          datePicker.value = formatDate(currentDate);
-          updateWeekdayButtons();
-          
-          // Date picker change event
-          datePicker.addEventListener('change', (e) => {
-            currentDate = new Date(e.target.value);
-            updateWeekdayButtons();
-          });
-        }
-
-        // Weekday button events
-        weekdayBtns.forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const day = parseInt(e.target.dataset.day);
-            goToWeekday(day);
-          });
-        });
       })();
     </script>
     <!-- Authentication Modal -->
