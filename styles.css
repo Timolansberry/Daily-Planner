@@ -231,6 +231,26 @@ body {
     display: block !important;
   }
   
+  /* Show hamburger menu button on mobile screens for pomodoro page */
+  .hamburger-menu-btn {
+    display: flex !important;
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    z-index: 1300;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
   /* Show user info menu on mobile */
   .user-info-menu {
     display: flex !important;
@@ -337,6 +357,11 @@ body {
   
   /* Hide mobile user profile icon on desktop */
   .mobile-user-profile-icon {
+    display: none !important;
+  }
+  
+  /* Hide hamburger menu button on desktop (only needed for mobile) */
+  .hamburger-menu-btn {
     display: none !important;
   }
   
@@ -2230,35 +2255,31 @@ body {
     justify-content: space-between;
   }
   
-  /* Position nav icons inside clock container */
+  /* Hide the original nav-toggle since header is hidden */
   .nav-toggle {
-    display: flex !important;
-    position: absolute;
-    top: var(--space-4);
-    right: var(--space-4);
-    z-index: 10;
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-md);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--accent);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
+    display: none !important;
   }
   
-  /* Draw the three hamburger lines */
-  .nav-toggle::before {
-    content: "";
-    display: block;
-    width: 16px;
-    height: 2px;
-    background: currentColor;
-    box-shadow: 0 5px 0 currentColor, 0 -5px 0 currentColor;
-    border-radius: 2px;
+  /* Position hamburger menu button at top right for smallest screens */
+  .hamburger-menu-btn {
+    position: absolute !important;
+    top: var(--space-4) !important;
+    right: var(--space-4) !important;
+    bottom: auto !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--accent) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
   }
+  
   
   .mobile-user-profile-icon {
     display: block !important;
