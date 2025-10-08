@@ -1190,9 +1190,21 @@ class DateManager {
     
     // Bind events
     this.datePicker.addEventListener('change', (e) => {
-      currentDate = new Date(e.target.value);
+      // Parse the date picker value as local date to avoid timezone issues
+      const dateValue = e.target.value; // This is in YYYY-MM-DD format
+      const [year, month, day] = dateValue.split('-').map(Number);
+      const selectedDate = new Date(year, month - 1, day); // month is 0-indexed
+      
+      currentDate = selectedDate;
       this.updateWeekdayButtons();
-      this.planner.loadPlan(formatDate(currentDate));
+      
+      // Load plan for the selected date using the original date string
+      this.planner.loadPlan(dateValue);
+      
+      // Announce the date change for accessibility
+      announceStatus(`Loading plan for ${dateValue}`);
+      
+      console.log('Date changed to:', dateValue);
     });
 
     this.weekdayBtns.forEach(btn => {
@@ -1221,9 +1233,17 @@ class DateManager {
     const diff = targetDay - currentWeekday;
     
     currentDate.setDate(currentDate.getDate() + diff);
-    this.datePicker.value = formatDate(currentDate);
+    const dateString = formatDate(currentDate);
+    this.datePicker.value = dateString;
     this.updateWeekdayButtons();
-    this.planner.loadPlan(formatDate(currentDate));
+    
+    // Load plan for the selected weekday
+    this.planner.loadPlan(dateString);
+    
+    // Announce the date change for accessibility
+    announceStatus(`Loading plan for ${dateString}`);
+    
+    console.log('Weekday changed to:', dateString);
   }
 }
 
