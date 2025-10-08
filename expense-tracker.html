@@ -182,7 +182,8 @@
       try{ 
         // Use storage adapter if available (Firebase + localStorage fallback)
         if (window.storage) {
-          const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          // Use selected date if available, otherwise use today
+          const dateStr = window.currentExpenseDate || new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
           console.log('Loading expenses for date:', dateStr);
           const data = await window.storage.get(dateStr, 'expenses');
           console.log('Loaded expenses data:', data);
@@ -205,8 +206,10 @@
       try {
         // Use storage adapter if available (Firebase + localStorage fallback)
         if (window.storage) {
-          const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          // Use selected date if available, otherwise use today
+          const dateStr = window.currentExpenseDate || new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
           await window.storage.set(dateStr, { expenses: arr }, 'expenses');
+          console.log('Saved expenses for date:', dateStr);
         } else {
           // Fallback to direct localStorage
           localStorage.setItem(ADD_KEY, JSON.stringify(arr));
@@ -255,15 +258,18 @@
       }
     }, 1000);
 
-    // Date picker and weekday functionality
+    // Date picker and weekday functionality with timezone-safe date handling
     (function() {
       const datePicker = document.getElementById('date-picker');
       const weekdayBtns = document.querySelectorAll('.weekday-btn');
       let currentDate = new Date();
 
-      // Format date to YYYY-MM-DD string
+      // Format date to YYYY-MM-DD string using local timezone
       function formatDate(date) {
-        return date.toISOString().split('T')[0];
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
       }
 
       // Get weekday number (0 = Sunday, 1 = Monday, etc.)
@@ -281,25 +287,62 @@
         });
       }
 
-      // Go to specific weekday
+      // Go to specific weekday with timezone-safe date handling
       function goToWeekday(targetDay) {
         const currentWeekday = getWeekday(currentDate);
         const diff = targetDay - currentWeekday;
         
         currentDate.setDate(currentDate.getDate() + diff);
-        datePicker.value = formatDate(currentDate);
+        const dateString = formatDate(currentDate);
+        datePicker.value = dateString;
         updateWeekdayButtons();
+        
+        // Load expenses for the selected date
+        loadExpensesForDate(dateString);
       }
 
-      // Initialize
+      // Load expenses for a specific date
+      async function loadExpensesForDate(dateString) {
+        try {
+          console.log('Loading expenses for date:', dateString);
+          
+          // Update the global date context for storage functions
+          window.currentExpenseDate = dateString;
+          
+          // Re-render expenses for the selected date
+          await render();
+          
+          console.log('Expenses loaded for date:', dateString);
+        } catch (error) {
+          console.error('Error loading expenses for date:', error);
+        }
+      }
+
+      // Initialize with correct local date
       if (datePicker) {
+        // Ensure we're using local date, not UTC
+        const localDate = new Date();
+        currentDate = new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate());
         datePicker.value = formatDate(currentDate);
         updateWeekdayButtons();
         
-        // Date picker change event
+        // Set initial date context
+        window.currentExpenseDate = formatDate(currentDate);
+        
+        // Date picker change event with timezone-safe handling
         datePicker.addEventListener('change', (e) => {
-          currentDate = new Date(e.target.value);
-          updateWeekdayButtons();
+          // Parse the date picker value as local date to avoid timezone issues
+          const dateValue = e.target.value; // This is in YYYY-MM-DD format
+          const [year, month, day] = dateValue.split('-').map(Number);
+          const selectedDate = new Date(year, month - 1, day); // month is 0-indexed
+          
+          if (!isNaN(selectedDate.getTime())) {
+            currentDate = selectedDate;
+            updateWeekdayButtons();
+            
+            // Load expenses for the selected date
+            loadExpensesForDate(dateValue);
+          }
         });
       }
 

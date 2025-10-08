@@ -709,8 +709,77 @@
                     // Create a new PlannerManager instance
                     const planner = new window.PlannerManager();
                     
-                    // Set up date management
+                    // Set up date management with timezone-safe date handling
                     const dateManager = new window.DateManager(planner);
+                    
+                    // Override the date manager's init method to use timezone-safe date handling
+                    const originalInit = dateManager.init;
+                    dateManager.init = function() {
+                        // Set initial date
+                        this.datePicker.value = window.formatDate(new Date());
+                        this.updateWeekdayButtons();
+                        
+                        // Bind events with timezone-safe date handling
+                        this.datePicker.addEventListener('change', (e) => {
+                            // Parse the date picker value as local date to avoid timezone issues
+                            const dateValue = e.target.value; // This is in YYYY-MM-DD format
+                            const [year, month, day] = dateValue.split('-').map(Number);
+                            const selectedDate = new Date(year, month - 1, day); // month is 0-indexed
+                            
+                            // Update global currentDate
+                            if (window.currentDate) {
+                                window.currentDate = selectedDate;
+                            }
+                            this.updateWeekdayButtons();
+                            
+                            // Load plan for the selected date using the original date string
+                            this.planner.loadPlan(dateValue);
+                            
+                            // Announce the date change for accessibility
+                            if (window.announceStatus) {
+                                window.announceStatus(`Loading habits for ${dateValue}`);
+                            }
+                            
+                            console.log('Date changed to:', dateValue);
+                        });
+
+                        this.weekdayBtns.forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const day = parseInt(e.target.dataset.day);
+                                this.goToWeekday(day);
+                            });
+                        });
+                    };
+
+                    // Override the goToWeekday method to use timezone-safe date handling
+                    const originalGoToWeekday = dateManager.goToWeekday;
+                    dateManager.goToWeekday = function(targetDay) {
+                        if (!this.datePicker) return;
+                        
+                        const currentWeekday = window.getWeekday ? window.getWeekday(new Date()) : new Date().getDay();
+                        const diff = targetDay - currentWeekday;
+                        
+                        const newDate = new Date();
+                        newDate.setDate(newDate.getDate() + diff);
+                        const dateString = window.formatDate ? window.formatDate(newDate) : newDate.toISOString().split('T')[0];
+                        this.datePicker.value = dateString;
+                        this.updateWeekdayButtons();
+                        
+                        // Update global currentDate
+                        if (window.currentDate) {
+                            window.currentDate = newDate;
+                        }
+                        
+                        // Load plan for the selected weekday
+                        this.planner.loadPlan(dateString);
+                        
+                        // Announce the date change for accessibility
+                        if (window.announceStatus) {
+                            window.announceStatus(`Loading habits for ${dateString}`);
+                        }
+                        
+                        console.log('Weekday changed to:', dateString);
+                    };
                     
                     // Bind habit events
                     try { 
@@ -728,8 +797,9 @@
                     // Make planner globally accessible
                     window.plannerApp = planner;
                     
-                    // Load today's plan
-                    await planner.loadPlan(window.formatDate ? window.formatDate(new Date()) : new Date().toISOString().split('T')[0]);
+                    // Load today's plan with timezone-safe date
+                    const todayString = window.formatDate ? window.formatDate(new Date()) : new Date().toISOString().split('T')[0];
+                    await planner.loadPlan(todayString);
                     
                     console.log('Habit-builder page initialized successfully');
                 }

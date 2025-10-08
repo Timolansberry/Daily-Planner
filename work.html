@@ -278,9 +278,10 @@
     async function load(){ 
       try{
         if (window.storage) {
-          const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          // Use selected date if available, otherwise use today
+          const dateStr = window.currentWorkDate || new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
           const data = await window.storage.get(dateStr, 'work');
-          console.log('Loaded work data:', data);
+          console.log('Loaded work data for date:', dateStr, data);
           return Array.isArray(data?.tasks) ? data.tasks : [];
         } else {
           const tasks = JSON.parse(localStorage.getItem(TASK_KEY)) || [];
@@ -295,9 +296,11 @@
     async function save(a){ 
       try {
         if (window.storage) {
-          const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          // Use selected date if available, otherwise use today
+          const dateStr = window.currentWorkDate || new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
           const existingData = await window.storage.get(dateStr, 'work') || {};
           await window.storage.set(dateStr, { ...existingData, tasks: a }, 'work');
+          console.log('Saved work tasks for date:', dateStr);
         } else {
           localStorage.setItem(TASK_KEY, JSON.stringify(a));
         }
@@ -310,7 +313,8 @@
     async function loadDailyDuties(){ 
       try{
         if (window.storage) {
-          const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          // Use selected date if available, otherwise use today
+          const dateStr = window.currentWorkDate || new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
           console.log('Loading daily duties for date:', dateStr);
           const data = await window.storage.get(dateStr, 'work');
           console.log('Loaded work data:', data);
@@ -331,9 +335,11 @@
     async function saveDailyDuties(a){ 
       try {
         if (window.storage) {
-          const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+          // Use selected date if available, otherwise use today
+          const dateStr = window.currentWorkDate || new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
           const existingData = await window.storage.get(dateStr, 'work') || {};
           await window.storage.set(dateStr, { ...existingData, dailyDuties: a }, 'work');
+          console.log('Saved daily duties for date:', dateStr);
         } else {
           localStorage.setItem(DAILY_DUTIES_KEY, JSON.stringify(a));
         }
@@ -661,7 +667,7 @@
     initializePage();
 
 
-    // Date picker and weekday functionality
+    // Date picker and weekday functionality with timezone-safe date handling
     (function() {
       const datePicker = document.getElementById('date-picker');
       const weekdayBtns = document.querySelectorAll('.weekday-btn');
@@ -690,7 +696,7 @@
         });
       }
 
-      // Go to specific weekday (improved logic)
+      // Go to specific weekday with timezone-safe date handling
       function goToWeekday(targetDay) {
         const currentWeekday = getWeekday(currentDate);
         const diff = targetDay - currentWeekday;
@@ -704,6 +710,28 @@
           datePicker.value = formatDate(currentDate);
         }
         updateWeekdayButtons();
+        
+        // Load data for the selected date
+        loadDataForDate(formatDate(currentDate));
+      }
+
+      // Load data for a specific date
+      async function loadDataForDate(dateString) {
+        try {
+          console.log('Loading work data for date:', dateString);
+          
+          // Update the global date context for storage functions
+          window.currentWorkDate = dateString;
+          
+          // Re-render all data for the selected date
+          await renderDailyDuties();
+          await render();
+          await renderDueSections();
+          
+          console.log('Work data loaded for date:', dateString);
+        } catch (error) {
+          console.error('Error loading work data for date:', error);
+        }
       }
 
       // Initialize with correct local date
@@ -714,12 +742,19 @@
         datePicker.value = formatDate(currentDate);
         updateWeekdayButtons();
         
-        // Date picker change event
+        // Date picker change event with timezone-safe handling
         datePicker.addEventListener('change', (e) => {
-          const selectedDate = new Date(e.target.value);
+          // Parse the date picker value as local date to avoid timezone issues
+          const dateValue = e.target.value; // This is in YYYY-MM-DD format
+          const [year, month, day] = dateValue.split('-').map(Number);
+          const selectedDate = new Date(year, month - 1, day); // month is 0-indexed
+          
           if (!isNaN(selectedDate.getTime())) {
             currentDate = selectedDate;
             updateWeekdayButtons();
+            
+            // Load data for the selected date
+            loadDataForDate(dateValue);
           }
         });
       }
