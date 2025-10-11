@@ -19,7 +19,7 @@ A responsive daily planner web app with a dark blue + electric blue theme, built
 
 ## Firebase Integration
 
-The app supports Firebase integration with secure configuration:
+The app supports Firebase integration with secure configuration: 
 
 ✅ **Secure config management** - API keys not exposed in source code  
 ✅ **Firestore database integration** for cloud storage  
