@@ -30,9 +30,8 @@ function getCurrentPage() {
   if (filename === 'index.html' || filename === '') return 'planner';
   if (filename === 'habit-builder.html') return 'habits';
   if (filename === 'expense-tracker.html') return 'expenses';
-  if (filename === 'work.html') return 'work';
-  if (filename === 'pomodoro.html') return 'pomodoro';
-  
+  if (filename === 'workout-tracker.html') return 'workoutTracker';
+
   return 'planner'; // default
 }
 
@@ -306,6 +305,13 @@ const storage = {
         localStorage.removeItem(key);
         totalCleared++;
       }
+
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('workoutLocal:'))
+        .forEach((key) => {
+          localStorage.removeItem(key);
+          totalCleared++;
+        });
       
       console.log('✅ Cleared', totalCleared, 'items from localStorage');
       console.log('Local data cleared for clean Firebase-only experience');
@@ -378,6 +384,336 @@ const storage = {
   }
 };
 
+/**
+ * Workout templates and session logs under
+ * projects/{project}/users/{uid}/workout/workoutDay
+ * projects/{project}/users/{uid}/workout/YYYY/MM/DD
+ */
+window.workoutStore = {
+  LS_DAY: 'workoutLocal:workoutDay',
+  LS_META: 'workoutLocal:workoutMeta',
+  sessionLsKey(path) {
+    return 'workoutLocal:session:' + path;
+  },
+
+  _base() {
+    if (!storage._userId) return null;
+    return `projects/${storage._projectId}/users/${storage._userId}/workout`;
+  },
+
+  normalizeTemplates(raw) {
+    const out = { A: [], B: [], C: [] };
+    if (!raw || typeof raw !== 'object') return out;
+    ['A', 'B', 'C'].forEach((k) => {
+      const arr = Array.isArray(raw[k]) ? raw[k] : [];
+      out[k] = arr
+        .map((item, i) => {
+          if (typeof item === 'string') {
+            const name = item.trim();
+            if (!name) return null;
+            return { id: 't_' + k + '_' + i + '_' + generateId(), name };
+          }
+          const name = (item.name || '').trim();
+          if (!name) return null;
+          return {
+            id: item.id && String(item.id).length ? item.id : 't_' + k + '_' + generateId(),
+            name
+          };
+        })
+        .filter(Boolean);
+    });
+    return out;
+  },
+
+  splitDatePath(isoDate) {
+    const parts = (isoDate || '').split('-');
+    const y = parts[0] || '1970';
+    const m = parts[1] || '01';
+    const d = parts[2] || '01';
+    return { y, m, d, path: `${y}/${m}/${d}` };
+  },
+
+  async getTemplates() {
+    const base = this._base();
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        const snap = await get(ref(window.firebase.db, `${base}/workoutDay`));
+        if (snap.exists()) return this.normalizeTemplates(snap.val());
+      } catch (e) {
+        console.error('workoutStore.getTemplates', e);
+      }
+    }
+    const raw = localStorage.getItem(this.LS_DAY);
+    return this.normalizeTemplates(raw ? JSON.parse(raw) : {});
+  },
+
+  async saveTemplates(templates) {
+    const norm = this.normalizeTemplates(templates);
+    const base = this._base();
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        await set(ref(window.firebase.db, `${base}/workoutDay`), norm);
+      } catch (e) {
+        console.error('workoutStore.saveTemplates', e);
+      }
+    }
+    localStorage.setItem(this.LS_DAY, JSON.stringify(norm));
+    return norm;
+  },
+
+  async getSession(isoDate) {
+    const { y, m, d, path } = this.splitDatePath(isoDate);
+    const base = this._base();
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        const snap = await get(ref(window.firebase.db, `${base}/${y}/${m}/${d}`));
+        if (snap.exists()) return snap.val();
+      } catch (e) {
+        console.error('workoutStore.getSession', e);
+      }
+    }
+    const raw = localStorage.getItem(this.sessionLsKey(path));
+    return raw ? JSON.parse(raw) : null;
+  },
+
+  async saveSession(isoDate, sessionData) {
+    const { y, m, d, path } = this.splitDatePath(isoDate);
+    const payload = {
+      ...sessionData,
+      dateISO: isoDate,
+      lastUpdated: new Date().toISOString()
+    };
+    const base = this._base();
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        await set(ref(window.firebase.db, `${base}/${y}/${m}/${d}`), payload);
+      } catch (e) {
+        console.error('workoutStore.saveSession', e);
+      }
+    }
+    localStorage.setItem(this.sessionLsKey(path), JSON.stringify(payload));
+    await this._pushRecentPath(path);
+  },
+
+  async _pushRecentPath(path) {
+    const list = await this.getRecentSessionPaths(80);
+    const merged = [path, ...list.filter((p) => p !== path)].slice(0, 50);
+    const base = this._base();
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        await set(ref(window.firebase.db, `${base}/_meta/recentSessionPaths`), merged);
+      } catch (e) {
+        console.error('workoutStore._pushRecentPath', e);
+      }
+    }
+    localStorage.setItem(this.LS_META, JSON.stringify({ recentSessionPaths: merged }));
+  },
+
+  async getRecentSessionPaths(limit) {
+    const base = this._base();
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        const snap = await get(ref(window.firebase.db, `${base}/_meta/recentSessionPaths`));
+        if (snap.exists() && Array.isArray(snap.val())) return snap.val().slice(0, limit);
+      } catch (e) {
+        console.error('workoutStore.getRecentSessionPaths', e);
+      }
+    }
+    const raw = localStorage.getItem(this.LS_META);
+    if (!raw) return [];
+    try {
+      const o = JSON.parse(raw);
+      return Array.isArray(o.recentSessionPaths) ? o.recentSessionPaths.slice(0, limit) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  async loadSessionByPath(path) {
+    const [y, m, d] = path.split('/');
+    if (!y || !m || !d) return null;
+    const base = this._base();
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        const snap = await get(ref(window.firebase.db, `${base}/${y}/${m}/${d}`));
+        if (snap.exists()) return snap.val();
+      } catch (e) {
+        console.error('workoutStore.loadSessionByPath', e);
+      }
+    }
+    const raw = localStorage.getItem(this.sessionLsKey(path));
+    return raw ? JSON.parse(raw) : null;
+  },
+
+  /**
+   * @param {string} excludePath — YYYY/MM/DD of current session (skip same day)
+   */
+  async getExerciseHistory(templateId, name, excludePath, limit) {
+    const cap = limit || 15;
+    const paths = await this.getRecentSessionPaths(40);
+    const history = [];
+    const nameKey = (name || '').trim().toLowerCase();
+
+    for (const p of paths) {
+      if (p === excludePath) continue;
+      const session = await this.loadSessionByPath(p);
+      if (!session || !Array.isArray(session.exercises)) continue;
+      for (const ex of session.exercises) {
+        let match = false;
+        if (templateId) {
+          match = ex.templateId === templateId;
+        } else {
+          match = !!ex.oneOff && (ex.name || '').trim().toLowerCase() === nameKey;
+        }
+        if (!match) continue;
+        const sets = Array.isArray(ex.sets) ? ex.sets : [];
+        if (!sets.length) continue;
+        const last = sets[sets.length - 1];
+        const isCardio = nameKey === 'cardio';
+        if (isCardio) {
+          const minutes = last.minutes != null ? last.minutes : '—';
+          const act = last.cardioActivity != null && String(last.cardioActivity).trim() !== ''
+            ? String(last.cardioActivity).trim()
+            : '—';
+          history.push({
+            datePath: p,
+            weightKg: `${minutes} min`,
+            repsDisplay: act
+          });
+        } else {
+          const repsDisplay = '(' + sets.map((s) => String(s.reps != null ? s.reps : '—')).join('-') + ')';
+          const weightKg = last.weightKg != null ? last.weightKg : '—';
+          history.push({ datePath: p, weightKg, repsDisplay });
+        }
+        break;
+      }
+      if (history.length >= cap) break;
+    }
+    return history;
+  },
+
+  /**
+   * Paths under workout/ that are sessions: YYYY/MM/DD (merged from Firebase tree, recent list, localStorage).
+   */
+  async collectAllSessionPaths() {
+    const paths = new Set();
+    try {
+      const recent = await this.getRecentSessionPaths(500);
+      recent.forEach((p) => paths.add(p));
+    } catch (e) {
+      console.error('workoutStore.collectAllSessionPaths recent', e);
+    }
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('workoutLocal:session:')) {
+          paths.add(k.slice('workoutLocal:session:'.length));
+        }
+      }
+    } catch (e) {
+      console.error('workoutStore.collectAllSessionPaths ls', e);
+    }
+    const base = this._base();
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, get } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        const snap = await get(ref(window.firebase.db, base));
+        if (snap.exists()) {
+          const val = snap.val();
+          for (const y of Object.keys(val || {})) {
+            if (y === 'workoutDay' || y === '_meta') continue;
+            if (!/^\d{4}$/.test(y)) continue;
+            const months = val[y];
+            if (!months || typeof months !== 'object') continue;
+            for (const m of Object.keys(months)) {
+              if (!/^\d{1,2}$/.test(m)) continue;
+              const days = months[m];
+              if (!days || typeof days !== 'object') continue;
+              for (const d of Object.keys(days)) {
+                if (!/^\d{1,2}$/.test(d)) continue;
+                const mm = String(m).padStart(2, '0');
+                const dd = String(d).padStart(2, '0');
+                paths.add(`${y}/${mm}/${dd}`);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('workoutStore.collectAllSessionPaths firebase', e);
+      }
+    }
+    return Array.from(paths).sort();
+  },
+
+  _normalizeExportSet(ex, s) {
+    const nameCardio = (ex.name || '').trim().toLowerCase() === 'cardio';
+    const hasCardioFields =
+      (s && s.minutes != null && s.minutes !== '') ||
+      (s && s.cardioActivity != null && String(s.cardioActivity).trim() !== '');
+    if (nameCardio || hasCardioFields) {
+      return {
+        type: 'cardio',
+        minutes: s.minutes != null && s.minutes !== '' ? Number(s.minutes) : null,
+        activity: s.cardioActivity != null ? String(s.cardioActivity).trim() : null
+      };
+    }
+    return {
+      type: 'strength',
+      weightKg: s.weightKg != null && s.weightKg !== '' ? Number(s.weightKg) : null,
+      reps: s.reps != null && s.reps !== '' ? Number(s.reps) : null
+    };
+  },
+
+  /**
+   * Full JSON export for backup: all known sessions, by date, with strength vs cardio sets.
+   */
+  async exportAllWorkoutSessionsJson() {
+    const pathList = await this.collectAllSessionPaths();
+    const sessionsByDate = [];
+    for (const path of pathList) {
+      const raw = await this.loadSessionByPath(path);
+      if (!raw || typeof raw !== 'object') continue;
+      const parts = path.split('/');
+      const y = parts[0];
+      const m = parts[1];
+      const d = parts[2];
+      const dateISO =
+        raw.dateISO && /^\d{4}-\d{2}-\d{2}$/.test(raw.dateISO)
+          ? raw.dateISO
+          : `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      sessionsByDate.push({
+        date: dateISO,
+        datePath: path,
+        dayPlan: raw.dayPlan != null ? raw.dayPlan : null,
+        lastUpdated: raw.lastUpdated != null ? raw.lastUpdated : null,
+        exercises: Array.isArray(raw.exercises)
+          ? raw.exercises.map((ex) => ({
+              name: ex.name || 'Exercise',
+              oneOff: !!ex.oneOff,
+              templateId: ex.templateId != null ? ex.templateId : null,
+              sets: Array.isArray(ex.sets) ? ex.sets.map((set) => this._normalizeExportSet(ex, set)) : []
+            }))
+          : []
+      });
+    }
+    return {
+      exportVersion: 1,
+      exportedAt: new Date().toISOString(),
+      source: 'daily-planner-workout-tracker',
+      userId: storage._userId || null,
+      sessionCount: sessionsByDate.length,
+      sessionsByDate
+    };
+  }
+};
+
 // ============================================================================
 // DATA MODEL
 // ============================================================================
@@ -427,6 +763,10 @@ class PlannerManager {
   async loadPlan(dateStr) {
     try {
       const currentPage = getCurrentPage();
+      if (currentPage === 'workoutTracker') {
+        currentPlan = getEmptyPlan();
+        return;
+      }
       // When user is logged in, load from Firebase only (no localStorage fallback)
       const data = storage._firebaseReady && storage._userId 
         ? await storage.getFromFirebase(dateStr, currentPage)
@@ -471,8 +811,9 @@ class PlannerManager {
    * Save current plan
    */
   async savePlan() {
-    const dateStr = formatDate(currentDate);
     const currentPage = getCurrentPage();
+    if (currentPage === 'workoutTracker') return;
+    const dateStr = formatDate(currentDate);
     await storage.set(dateStr, currentPlan, currentPage);
     console.log(`Plan saved for ${dateStr} to ${currentPage}`);
   }

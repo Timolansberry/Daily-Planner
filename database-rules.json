@@ -35,6 +35,24 @@
                 ".read": "auth != null && auth.uid == $userId",
                 ".write": "auth != null && auth.uid == $userId"
               }
+            },
+            "workout": {
+              "workoutDay": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              },
+              "_meta": {
+                ".read": "auth != null && auth.uid == $userId",
+                ".write": "auth != null && auth.uid == $userId"
+              },
+              "$year": {
+                "$month": {
+                  "$day": {
+                    ".read": "auth != null && auth.uid == $userId",
+                    ".write": "auth != null && auth.uid == $userId"
+                  }
+                }
+              }
             }
           }
         }

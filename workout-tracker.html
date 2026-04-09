@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Expense Tracker</title>
+  <title>Workout Tracker</title>
   
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300b3ff'%3E%3Ctext x='12' y='18' text-anchor='middle' font-family='Arial, sans-serif' font-size='20' font-weight='bold' fill='%2300b3ff'%3E$%3C/text%3E%3C/svg%3E">
@@ -15,7 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
+    <div class="container workout-tracker-page">
     <header class="header">
       <!-- Mobile User Profile Icon - Left side next to hamburger -->
       <div class="mobile-user-profile-icon">
@@ -52,13 +52,13 @@
       <!-- User Info Menu Backdrop -->
       <div id="user-info-menu-backdrop" class="user-info-menu-backdrop"></div>
       
-      <h1 class="title">EXPENSE TRACKER</h1>
+      <h1 class="title">WORKOUT TRACKER</h1>
       <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation"></button>
             <nav class="app-nav" aria-label="App navigation">
                 <a href="index.html">Planner</a>
                 <a href="habit-builder.html">Habits</a>
-                <a href="expense-tracker.html" class="active">Expenses</a>
-                <a href="workout-tracker.html">Workout Tracker</a>
+                <a href="expense-tracker.html">Expenses</a>
+                <a href="workout-tracker.html" class="active">Workout Tracker</a>
       <div class="nav-controls">
         <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
           <span class="theme-icon">🌙</span>
@@ -101,259 +101,155 @@
     </nav>
     </header>
 
-    <section class="calendar-section">
-      <div class="calendar-top">
-        <div class="date-controls">
-          <div class="date-input-row">
-            <label for="date-picker" class="sr-only">Select date</label>
-            <input type="date" id="date-picker" class="date-picker" aria-label="Select date">
-          </div>
-        </div>
-      </div>
-
-      <div class="calendar-bottom">
-        <div class="weekday-toggles" role="group" aria-label="Weekday selection">
-          <button type="button" class="weekday-btn" data-day="1">M</button>
-          <button type="button" class="weekday-btn" data-day="2">T</button>
-          <button type="button" class="weekday-btn" data-day="3">W</button>
-          <button type="button" class="weekday-btn" data-day="4">T</button>
-          <button type="button" class="weekday-btn" data-day="5">F</button>
-          <button type="button" class="weekday-btn" data-day="6">S</button>
-          <button type="button" class="weekday-btn" data-day="0">S</button>
-        </div>
-      </div>
-    </section>
-    <script>
-      (function(){
-        const header = document.querySelector('.header');
-        const btn = document.getElementById('nav-toggle');
-        const nav = document.querySelector('.app-nav');
-        const root = document.documentElement;
-        if(!btn || !header) return;
-        btn.setAttribute('aria-expanded','false');
-        btn.addEventListener('click', ()=>{
-          // toggle both header-local and a global root class as a fallback
-          const openLocal = header.classList.toggle('nav-open');
-          const openGlobal = root.classList.toggle('nav-open');
-          // reflect the local open state (they should stay in sync)
-          btn.setAttribute('aria-expanded', String(openLocal || openGlobal));
-        });
-        nav && nav.addEventListener('click', (e)=>{ if(e.target.tagName==='A'){ header.classList.remove('nav-open'); root.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
-        document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ header.classList.remove('nav-open'); root.classList.remove('nav-open'); btn.setAttribute('aria-expanded','false'); } });
-      })();
-    </script>
-
-    <main class="main-content">
-      <section class="section">
-        <h2 class="section-title">Add Expense</h2>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-          <input id="expense-desc" placeholder="Description" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
-          <input id="expense-amount" placeholder="Amount" type="number" step="0.01" style="width:120px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
-          <input id="expense-cat" placeholder="Category" style="width:140px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)">
-          <button id="add-expense" class="add-btn">+</button>
-        </div>
-      </section>
-
-      <section class="section">
-        <h2 class="section-title">Expenses</h2>
-        <ul id="expenses-list" style="list-style:none;display:flex;flex-direction:column;gap:8px;padding:0"></ul>
-        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;justify-content:space-between;">
-          <div id="expenses-total" style="font-weight:600;color:var(--accent)">Total: $0.00</div>
-          <div style="display:flex;gap:8px">
-            <button id="clear-expenses" class="clear-all-btn">Clear All</button>
-            <button onclick="location.href='index.html'" class="add-btn">Back</button>
-          </div>
-        </div>
+    <main class="main-content workout-main-content">
+      <section class="section workout-actions-section" aria-labelledby="workout-actions-heading">
+        <h2 id="workout-actions-heading" class="section-title">Get Started</h2>
+        <button type="button" id="log-workout-btn" class="log-workout-btn" aria-label="Log workout">
+          <span aria-hidden="true">+</span>
+        </button>
+        <p class="log-workout-label">Log Workout</p>
+        <button type="button" id="view-progress-btn" class="view-progress-btn">View Progress</button>
+        <button type="button" id="edit-workout-day-btn" class="edit-workout-day-btn">Edit workout day</button>
       </section>
     </main>
   </div>
 
-  <script>
-    // Simple expense tracker using localStorage
-    const listEl = document.getElementById('expenses-list');
-    const totalEl = document.getElementById('expenses-total');
-    const desc = document.getElementById('expense-desc');
-    const amount = document.getElementById('expense-amount');
-    const cat = document.getElementById('expense-cat');
-    const ADD_KEY = 'dailyplanner:expenses';
+  <div id="log-workout-modal" class="log-workout-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="log-workout-modal-title" aria-hidden="true">
+    <div class="log-workout-modal-backdrop" id="log-workout-modal-backdrop" aria-hidden="true"></div>
+    <div class="log-workout-modal-panel">
+      <div class="log-workout-modal-header">
+        <h2 id="log-workout-modal-title" class="log-workout-modal-title">Log workout</h2>
+        <button type="button" class="log-workout-modal-close" id="log-workout-modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="log-workout-modal-body">
+        <div class="log-workout-field">
+          <label for="log-workout-date" class="log-workout-label">Workout date</label>
+          <p class="log-workout-hint">Tap the field to open the calendar.</p>
+          <input type="date" id="log-workout-date" class="log-workout-date-input" autocomplete="off">
+        </div>
+        <fieldset class="log-workout-fieldset">
+          <legend class="log-workout-label">Workout day</legend>
+          <div class="workout-day-segment workout-day-segment-abc" role="presentation">
+            <input class="sr-only workout-day-input" type="radio" name="workout-day" id="workout-day-a" value="A" checked>
+            <label for="workout-day-a" class="workout-day-segment-btn">A</label>
+            <input class="sr-only workout-day-input" type="radio" name="workout-day" id="workout-day-b" value="B">
+            <label for="workout-day-b" class="workout-day-segment-btn">B</label>
+            <input class="sr-only workout-day-input" type="radio" name="workout-day" id="workout-day-c" value="C">
+            <label for="workout-day-c" class="workout-day-segment-btn">C</label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="log-workout-modal-footer">
+        <button type="button" class="log-workout-cancel-btn" id="log-workout-cancel">Cancel</button>
+        <button type="button" class="log-workout-continue-btn" id="log-workout-continue">Continue</button>
+      </div>
+    </div>
+  </div>
 
-    async function loadExpenses(){
-      try{ 
-        // Use storage adapter if available (Firebase + localStorage fallback)
-        if (window.storage) {
-          // Use selected date if available, otherwise use today
-          const dateStr = window.currentExpenseDate || new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-          console.log('Loading expenses for date:', dateStr);
-          const data = await window.storage.get(dateStr, 'expenses');
-          console.log('Loaded expenses data:', data);
-          const expenses = data?.expenses || [];
-          console.log('Returning expenses:', expenses);
-          return expenses;
-        } else {
-          // Fallback to direct localStorage
-          const localData = JSON.parse(localStorage.getItem(ADD_KEY))||[];
-          console.log('Using localStorage fallback:', localData);
-          return localData;
-        }
-      }catch(e){
-        console.error('Error loading expenses:', e);
-        return [];
-      }
-    }
+  <div id="workout-session-overlay" class="workout-session-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="workout-session-title" aria-hidden="true">
+    <div class="workout-session-backdrop" id="workout-session-backdrop"></div>
+    <div class="workout-session-panel">
+      <div class="workout-session-header">
+        <button type="button" class="workout-session-back-btn" id="workout-session-close" aria-label="Close session">← Back</button>
+        <h2 id="workout-session-title" class="workout-session-title">Log workout</h2>
+        <p id="workout-session-progress" class="workout-session-progress"></p>
+      </div>
+      <div class="workout-session-body">
+        <h3 id="workout-current-name" class="workout-current-name"></h3>
+        <p id="workout-session-hint" class="workout-session-hint" role="status"></p>
+        <ul id="workout-sets-today" class="workout-sets-today" aria-label="Sets logged today"></ul>
+        <p id="workout-set-edit-banner" class="workout-set-edit-banner" style="display: none;" role="status"></p>
+        <div id="workout-log-controls" class="workout-log-controls">
+          <button type="button" class="workout-history-btn" id="workout-history-btn">History</button>
+          <div id="workout-strength-fields" class="workout-log-fields-inline">
+            <label class="sr-only" for="workout-weight-input">Weight kg</label>
+            <input type="number" class="workout-weight-input" id="workout-weight-input" inputmode="decimal" step="0.25" min="0" placeholder="kg">
+            <label class="sr-only" for="workout-reps-input">Reps this set</label>
+            <input type="number" class="workout-reps-input" id="workout-reps-input" inputmode="numeric" step="1" min="0" placeholder="Reps">
+          </div>
+          <div id="workout-cardio-fields" class="workout-log-fields-inline workout-cardio-fields" style="display: none;">
+            <label class="sr-only" for="workout-cardio-minutes">Minutes</label>
+            <input type="number" class="workout-cardio-minutes-input" id="workout-cardio-minutes" inputmode="decimal" step="1" min="0" placeholder="Min">
+            <label class="sr-only" for="workout-cardio-activity">Activity type</label>
+            <select id="workout-cardio-activity" class="workout-cardio-activity-select" aria-label="Activity type">
+              <option value="">Choose activity</option>
+              <option value="Walk">Walk</option>
+              <option value="Inclined walk">Inclined walk</option>
+              <option value="Boxing">Boxing</option>
+              <option value="__other__">Other</option>
+            </select>
+            <label class="sr-only" for="workout-cardio-other">Custom activity name</label>
+            <input type="text" class="workout-cardio-other-input" id="workout-cardio-other" placeholder="Activity name" autocomplete="off" style="display: none;">
+          </div>
+          <button type="button" class="workout-save-set-btn" id="workout-save-set-btn">Save set</button>
+          <button type="button" class="workout-cancel-edit-set-btn" id="workout-cancel-edit-set-btn" style="display: none;">Cancel edit</button>
+          <button type="button" class="workout-next-exercise-btn" id="workout-next-exercise-btn" aria-label="Finish this exercise and go to next">Next exercise</button>
+        </div>
+        <div id="workout-history-panel" class="workout-history-panel" style="display: none;" role="region" aria-label="Exercise history">
+          <div class="workout-history-header">
+            <span>Previous sessions</span>
+            <button type="button" id="workout-history-close" class="workout-history-close">Close</button>
+          </div>
+          <div id="workout-history-content" class="workout-history-content"></div>
+        </div>
+        <div id="workout-oneoff-row" class="workout-oneoff-row">
+          <label class="workout-oneoff-label" for="workout-oneoff-name">Add another exercise (this day only)</label>
+          <div class="workout-oneoff-input-row">
+            <input type="text" id="workout-oneoff-name" class="workout-oneoff-name" placeholder="Exercise name" autocomplete="off">
+            <button type="button" id="workout-add-oneoff-btn" class="workout-add-oneoff-btn">Add</button>
+          </div>
+        </div>
+        <div id="workout-day-outline-wrap" class="workout-day-outline-wrap">
+          <h4 id="workout-day-outline-title" class="workout-day-outline-title">Full list</h4>
+          <ul id="workout-day-outline-list" class="workout-day-outline-list" aria-label="Exercises in this session"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    async function saveExpenses(arr){ 
-      try {
-        // Use storage adapter if available (Firebase + localStorage fallback)
-        if (window.storage) {
-          // Use selected date if available, otherwise use today
-          const dateStr = window.currentExpenseDate || new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-          await window.storage.set(dateStr, { expenses: arr }, 'expenses');
-          console.log('Saved expenses for date:', dateStr);
-        } else {
-          // Fallback to direct localStorage
-          localStorage.setItem(ADD_KEY, JSON.stringify(arr));
-        }
-      } catch(e) {
-        console.error('Error saving expenses:', e);
-        // Fallback to direct localStorage
-        localStorage.setItem(ADD_KEY, JSON.stringify(arr));
-      }
-    }
+  <div id="edit-workout-day-modal" class="edit-workout-day-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="edit-workout-day-title" aria-hidden="true">
+    <div class="edit-workout-day-backdrop" id="edit-workout-day-backdrop"></div>
+    <div class="edit-workout-day-panel">
+      <div class="edit-workout-day-header">
+        <h2 id="edit-workout-day-title" class="edit-workout-day-title">Edit workout day</h2>
+        <button type="button" class="edit-workout-day-close" id="edit-workout-day-close" aria-label="Close">×</button>
+      </div>
+      <div class="edit-workout-day-tabs">
+        <button type="button" class="edit-workout-tab" data-edit-day="A">Day A</button>
+        <button type="button" class="edit-workout-tab" data-edit-day="B">Day B</button>
+        <button type="button" class="edit-workout-tab" data-edit-day="C">Day C</button>
+      </div>
+      <div class="edit-workout-day-body">
+        <p class="edit-workout-help">Add, remove, or reorder exercises for this day. Changes are saved to your account.</p>
+        <ul id="edit-workout-list" class="edit-workout-list"></ul>
+        <button type="button" id="edit-workout-add" class="edit-workout-add">Add exercise</button>
+      </div>
+      <div class="edit-workout-day-footer">
+        <button type="button" id="edit-workout-cancel" class="log-workout-cancel-btn">Cancel</button>
+        <button type="button" id="edit-workout-save" class="log-workout-continue-btn">Save</button>
+      </div>
+    </div>
+  </div>
 
-    async function render(){
-      const items = await loadExpenses();
-      listEl.innerHTML = '';
-      let total = 0;
-      items.forEach((it,idx)=>{
-        total += Number(it.amount||0);
-        const li = document.createElement('li');
-        li.style.display='flex'; li.style.justifyContent='space-between'; li.style.alignItems='center';
-        li.innerHTML = `<div><strong>${escapeHtml(it.desc)}</strong> <span style="color:var(--muted)">(${escapeHtml(it.cat)})</span></div><div style="display:flex;gap:8px;align-items:center"><div>$${Number(it.amount).toFixed(2)}</div><button data-idx="${idx}" class="todo-delete">×</button></div>`;
-        listEl.appendChild(li);
-      });
-      totalEl.textContent = 'Total: $' + total.toFixed(2);
-    }
-
-    function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
-
-    document.getElementById('add-expense').addEventListener('click', async ()=>{
-      const d=desc.value.trim(); const a=Number(amount.value||0); const c=cat.value.trim();
-      if(!d||!a) return;
-      const arr = await loadExpenses(); arr.push({desc:d,amount:a,cat:c||''}); await saveExpenses(arr); desc.value=''; amount.value=''; cat.value=''; await render();
-    });
-
-    document.getElementById('clear-expenses').addEventListener('click', async ()=>{ if(confirm('Clear all expenses?')){ await saveExpenses([]); await render(); } });
-
-    listEl.addEventListener('click', async (e)=>{ if(e.target.dataset.idx){ const i=Number(e.target.dataset.idx); const arr=await loadExpenses(); arr.splice(i,1); await saveExpenses(arr); await render(); } });
-
-    // Initial render
-    render();
-    
-    // Re-render if user is already signed in (for when page loads with existing auth)
-    setTimeout(async () => {
-      if (window.firebase && window.firebase.auth && window.firebase.auth.currentUser) {
-        console.log('User already signed in, re-rendering expenses');
-        await render();
-      }
-    }, 1000);
-
-    // Date picker and weekday functionality with timezone-safe date handling
-    (function() {
-      const datePicker = document.getElementById('date-picker');
-      const weekdayBtns = document.querySelectorAll('.weekday-btn');
-      let currentDate = new Date();
-
-      // Format date to YYYY-MM-DD string using local timezone
-      function formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-
-      // Get weekday number (0 = Sunday, 1 = Monday, etc.)
-      function getWeekday(date) {
-        return date.getDay();
-      }
-
-      // Update weekday buttons to show current day
-      function updateWeekdayButtons() {
-        const currentWeekday = getWeekday(currentDate);
-        
-        weekdayBtns.forEach(btn => {
-          const day = parseInt(btn.dataset.day);
-          btn.classList.toggle('active', day === currentWeekday);
-        });
-      }
-
-      // Go to specific weekday with timezone-safe date handling
-      function goToWeekday(targetDay) {
-        const currentWeekday = getWeekday(currentDate);
-        const diff = targetDay - currentWeekday;
-        
-        currentDate.setDate(currentDate.getDate() + diff);
-        const dateString = formatDate(currentDate);
-        datePicker.value = dateString;
-        updateWeekdayButtons();
-        
-        // Load expenses for the selected date
-        loadExpensesForDate(dateString);
-      }
-
-      // Load expenses for a specific date
-      async function loadExpensesForDate(dateString) {
-        try {
-          console.log('Loading expenses for date:', dateString);
-          
-          // Update the global date context for storage functions
-          window.currentExpenseDate = dateString;
-          
-          // Re-render expenses for the selected date
-          await render();
-          
-          console.log('Expenses loaded for date:', dateString);
-        } catch (error) {
-          console.error('Error loading expenses for date:', error);
-        }
-      }
-
-      // Initialize with correct local date
-      if (datePicker) {
-        // Ensure we're using local date, not UTC
-        const localDate = new Date();
-        currentDate = new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate());
-        datePicker.value = formatDate(currentDate);
-        updateWeekdayButtons();
-        
-        // Set initial date context
-        window.currentExpenseDate = formatDate(currentDate);
-        
-        // Date picker change event with timezone-safe handling
-        datePicker.addEventListener('change', (e) => {
-          // Parse the date picker value as local date to avoid timezone issues
-          const dateValue = e.target.value; // This is in YYYY-MM-DD format
-          const [year, month, day] = dateValue.split('-').map(Number);
-          const selectedDate = new Date(year, month - 1, day); // month is 0-indexed
-          
-          if (!isNaN(selectedDate.getTime())) {
-            currentDate = selectedDate;
-            updateWeekdayButtons();
-            
-            // Load expenses for the selected date
-            loadExpensesForDate(dateValue);
-          }
-        });
-      }
-
-      // Weekday button events
-      weekdayBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const day = parseInt(e.target.dataset.day);
-          goToWeekday(day);
-        });
-      });
-    })();
-  </script>
+  <div id="view-progress-modal" class="view-progress-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="view-progress-title" aria-hidden="true">
+    <div class="view-progress-backdrop" id="view-progress-backdrop"></div>
+    <div class="view-progress-panel">
+      <div class="view-progress-header">
+        <h2 id="view-progress-title" class="view-progress-title">Recent sessions</h2>
+        <button type="button" id="view-progress-close" class="log-workout-modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="view-progress-body">
+        <ul id="view-progress-list" class="view-progress-list" aria-label="Session dates"></ul>
+        <div id="view-progress-detail" class="view-progress-detail" style="display: none;" aria-live="polite">
+          <h3 id="view-progress-detail-title" class="view-progress-detail-title"></h3>
+          <div id="view-progress-detail-body" class="view-progress-detail-body"></div>
+        </div>
+      </div>
+      <div class="view-progress-footer">
+        <button type="button" id="view-progress-export-btn" class="view-progress-export-btn">Export all sessions</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Authentication Modal -->
   <div id="auth-modal" class="auth-modal" style="display: none;">
@@ -457,7 +353,7 @@
     let wasUserSignedIn = false;
     
     // Authentication state change handler
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
             if (user) {
                 console.log('User signed in:', user.uid, user.email);
                 wasUserSignedIn = true;
@@ -471,13 +367,11 @@
                 
                 // Initialize Firebase storage
                 if (window.initWithFirebase) {
-                    window.initWithFirebase(user.uid);
+                    await window.initWithFirebase(user.uid);
                 }
-                
-                // Re-render expenses after Firebase initialization
-                setTimeout(async () => {
-                    console.log('Re-rendering expenses after Firebase init');
-                    await render();
+                window.dispatchEvent(new CustomEvent('workout-firebase-ready'));
+                setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent('workout-firebase-ready'));
                 }, 500);
       } else {
         console.log('No user signed in');
@@ -816,5 +710,6 @@
   </script>
   
   <script src="script.js"></script>
+  <script src="workout-tracker.js"></script>
 </body>
 </html>
