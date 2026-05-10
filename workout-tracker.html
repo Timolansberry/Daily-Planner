@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Workout Tracker</title>
   
-  <!-- Favicon (dumbbell) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300b3ff'%3E%3Crect x='2' y='7' width='5' height='10' rx='1.5'/%3E%3Crect x='17' y='7' width='5' height='10' rx='1.5'/%3E%3Crect x='6' y='10' width='12' height='4' rx='1'/%3E%3C/svg%3E">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300b3ff'%3E%3Crect x='2' y='7' width='5' height='10' rx='1.5'/%3E%3Crect x='17' y='7' width='5' height='10' rx='1.5'/%3E%3Crect x='6' y='10' width='12' height='4' rx='1'/%3E%3C/svg%3E">
+  <!-- Favicon: rounded diagonal dumbbell (outline + fill) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Cg%20transform%3D%27translate%2816%2016%29rotate%28-45%29translate%28-16%20-16%29%27%3E%3Crect%20x%3D%273%27%20y%3D%2711%27%20width%3D%276%27%20height%3D%2710%27%20rx%3D%272%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3Crect%20x%3D%271%27%20y%3D%2713%27%20width%3D%275%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3Crect%20x%3D%2710%27%20y%3D%2714%27%20width%3D%2712%27%20height%3D%274%27%20rx%3D%271%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3Crect%20x%3D%2723%27%20y%3D%2711%27%20width%3D%276%27%20height%3D%2710%27%20rx%3D%272%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3Crect%20x%3D%2726%27%20y%3D%2713%27%20width%3D%275%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Cg%20transform%3D%27translate%2816%2016%29rotate%28-45%29translate%28-16%20-16%29%27%3E%3Crect%20x%3D%273%27%20y%3D%2711%27%20width%3D%276%27%20height%3D%2710%27%20rx%3D%272%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3Crect%20x%3D%271%27%20y%3D%2713%27%20width%3D%275%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3Crect%20x%3D%2710%27%20y%3D%2714%27%20width%3D%2712%27%20height%3D%274%27%20rx%3D%271%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3Crect%20x%3D%2723%27%20y%3D%2711%27%20width%3D%276%27%20height%3D%2710%27%20rx%3D%272%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3Crect%20x%3D%2726%27%20y%3D%2713%27%20width%3D%275%27%20height%3D%276%27%20rx%3D%271.5%27%20fill%3D%27%2393d9ff%27%20stroke%3D%27%2300b3ff%27%20stroke-width%3D%271.2%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
   
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,7 +53,9 @@
       <div id="user-info-menu-backdrop" class="user-info-menu-backdrop"></div>
       
       <h1 class="title">WORKOUT TRACKER</h1>
-      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation"><span aria-hidden="true">&#9776;</span></button>
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">
+        <svg class="nav-toggle-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
             <nav class="app-nav" aria-label="App navigation">
                 <a href="index.html">Planner</a>
                 <a href="habit-builder.html">Habits</a>
@@ -241,6 +243,18 @@
         <button type="button" class="edit-workout-tab" data-edit-day="B">Day B</button>
         <button type="button" class="edit-workout-tab" data-edit-day="C">Day C</button>
       </div>
+      <div class="edit-workout-weekdays-section">
+        <p class="edit-workout-weekdays-hint">Which days of the week do you perform this workout? (Used to preselect A / B / C when you log a workout.)</p>
+        <div id="edit-workout-weekday-row" class="edit-workout-weekday-row" role="group" aria-label="Weekdays (Monday first)">
+          <button type="button" class="edit-wd-btn" data-wd="0" aria-pressed="false" aria-label="Monday">M</button>
+          <button type="button" class="edit-wd-btn" data-wd="1" aria-pressed="false" aria-label="Tuesday">T</button>
+          <button type="button" class="edit-wd-btn" data-wd="2" aria-pressed="false" aria-label="Wednesday">W</button>
+          <button type="button" class="edit-wd-btn" data-wd="3" aria-pressed="false" aria-label="Thursday">T</button>
+          <button type="button" class="edit-wd-btn" data-wd="4" aria-pressed="false" aria-label="Friday">F</button>
+          <button type="button" class="edit-wd-btn" data-wd="5" aria-pressed="false" aria-label="Saturday">S</button>
+          <button type="button" class="edit-wd-btn" data-wd="6" aria-pressed="false" aria-label="Sunday">S</button>
+        </div>
+      </div>
       <div class="edit-workout-day-body">
         <p class="edit-workout-help">Add, remove, or reorder exercises for this day. Changes are saved to your account.</p>
         <ul id="edit-workout-list" class="edit-workout-list"></ul>
@@ -262,10 +276,6 @@
       </div>
       <div class="view-progress-body">
         <ul id="view-progress-list" class="view-progress-list" aria-label="Session dates"></ul>
-        <div id="view-progress-detail" class="view-progress-detail" style="display: none;" aria-live="polite">
-          <h3 id="view-progress-detail-title" class="view-progress-detail-title"></h3>
-          <div id="view-progress-detail-body" class="view-progress-detail-body"></div>
-        </div>
       </div>
       <div class="view-progress-footer">
         <button type="button" id="view-progress-export-btn" class="view-progress-export-btn">Export all sessions</button>

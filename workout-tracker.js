@@ -20,6 +20,38 @@
     return `${m}/${d}/${y}`;
   }
 
+  /** User weekday: 0 = Monday … 6 = Sunday (matches MTWTFSS row). */
+  function isoToUserWeekday(iso) {
+    const parts = (iso || '').split('-').map((x) => parseInt(x, 10));
+    if (parts.length < 3 || parts.some((n) => Number.isNaN(n))) return 0;
+    const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+    const js = dt.getDay();
+    return js === 0 ? 6 : js - 1;
+  }
+
+  function suggestDayPlanForDate(iso, templates) {
+    const uw = isoToUserWeekday(iso);
+    const map = (templates && templates.weekdayByPlan) || { A: [], B: [], C: [] };
+    const order = ['A', 'B', 'C'];
+    for (const k of order) {
+      const days = map[k] || [];
+      if (days.length && days.includes(uw)) return k;
+    }
+    for (const k of order) {
+      const days = map[k] || [];
+      if (!days.length) return k;
+    }
+    return 'A';
+  }
+
+  function applySuggestedDayPlanForIso(iso) {
+    if (!iso || !state.templatesCache) return;
+    const plan = suggestDayPlanForDate(iso, state.templatesCache);
+    const id = plan === 'B' ? 'workout-day-b' : plan === 'C' ? 'workout-day-c' : 'workout-day-a';
+    const el = $(id);
+    if (el) el.checked = true;
+  }
+
   const state = {
     session: {
       isoDate: null,
@@ -29,7 +61,7 @@
     },
     editDay: 'A',
     editRows: [],
-    templatesCache: { A: [], B: [], C: [] },
+    templatesCache: { A: [], B: [], C: [], weekdayByPlan: { A: [], B: [], C: [] } },
     editingSetIndex: null,
     progressSelectedPath: null,
     historyShowAll: false,
@@ -79,7 +111,7 @@
     document.body.style.overflow = '';
   }
 
-  function openLogWorkoutModal() {
+  async function openLogWorkoutModal() {
     const dateInput = $('log-workout-date');
     if (dateInput) {
       const d = new Date();
@@ -88,8 +120,14 @@
       const day = String(d.getDate()).padStart(2, '0');
       dateInput.value = `${y}-${m}-${day}`;
     }
-    const a = $('workout-day-a');
-    if (a) a.checked = true;
+    try {
+      if (window.workoutStore) {
+        state.templatesCache = await window.workoutStore.getTemplates();
+      }
+    } catch (e) {
+      console.warn('openLogWorkoutModal templates', e);
+    }
+    applySuggestedDayPlanForIso(dateInput && dateInput.value);
     openModal($('log-workout-modal'));
     $('log-workout-modal-close') && $('log-workout-modal-close').focus();
   }
@@ -803,11 +841,15 @@
   async function openEditModal() {
     const ws = window.workoutStore;
     state.templatesCache = await ws.getTemplates();
+    if (!state.templatesCache.weekdayByPlan) {
+      state.templatesCache.weekdayByPlan = { A: [], B: [], C: [] };
+    }
     state.editDay = 'A';
     state.editRows = (state.templatesCache.A || []).map((t) => ({ id: t.id, name: t.name }));
     openModal($('edit-workout-day-modal'));
     renderEditTabs();
     renderEditList();
+    renderEditWeekdayButtons();
   }
 
   function closeEditModal() {
@@ -838,16 +880,41 @@
     });
   }
 
+  function syncWeekdaySelectionToCache() {
+    if (!state.templatesCache.weekdayByPlan) {
+      state.templatesCache.weekdayByPlan = { A: [], B: [], C: [] };
+    }
+    const selected = [...document.querySelectorAll('.edit-wd-btn.is-on')]
+      .map((b) => parseInt(b.getAttribute('data-wd'), 10))
+      .filter((n) => !Number.isNaN(n));
+    state.templatesCache.weekdayByPlan[state.editDay] = [...new Set(selected)].sort((a, b) => a - b);
+  }
+
+  function renderEditWeekdayButtons() {
+    if (!state.templatesCache.weekdayByPlan) {
+      state.templatesCache.weekdayByPlan = { A: [], B: [], C: [] };
+    }
+    const sel = state.templatesCache.weekdayByPlan[state.editDay] || [];
+    document.querySelectorAll('.edit-wd-btn').forEach((btn) => {
+      const i = parseInt(btn.getAttribute('data-wd'), 10);
+      const on = sel.includes(i);
+      btn.classList.toggle('is-on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
   function switchEditDay(day) {
     if (day === state.editDay) return;
     const names = readEditRowsFromDom();
     state.templatesCache[state.editDay] = names
       .filter((r) => r.name.length)
       .map((r) => ({ id: r.id, name: r.name }));
+    syncWeekdaySelectionToCache();
     state.editDay = day;
     state.editRows = (state.templatesCache[day] || []).map((t) => ({ id: t.id, name: t.name }));
     renderEditTabs();
     renderEditList();
+    renderEditWeekdayButtons();
   }
 
   function readEditRowsFromDom() {
@@ -859,6 +926,7 @@
   }
 
   async function saveEditModal() {
+    syncWeekdaySelectionToCache();
     const names = readEditRowsFromDom();
     state.templatesCache[state.editDay] = names
       .filter((r) => r.name.length)
@@ -899,14 +967,70 @@
     return new Date(y, mo - 1, da).getTime();
   }
 
+  function buildProgressDetailInnerHtml(session) {
+    if (!session || !Array.isArray(session.exercises) || !session.exercises.length) {
+      return '<p class="workout-progress-detail-empty">No exercises recorded for this day.</p>';
+    }
+    const withSets = session.exercises.filter((ex) => Array.isArray(ex.sets) && ex.sets.length > 0);
+    if (!withSets.length) {
+      return '<p class="workout-progress-detail-empty">No sets logged for this day.</p>';
+    }
+    return withSets
+      .map((ex) => {
+        const sets = ex.sets || [];
+        const name = ex.name || 'Exercise';
+        const stub = { name };
+        const lines = sets
+          .map((s, i) => `<li>${escapeHtml(formatSetLine(stub, s, i + 1))}</li>`)
+          .join('');
+        return `<div class="workout-progress-ex"><strong>${escapeHtml(name)}</strong><ul class="workout-progress-ex-sets">${lines}</ul></div>`;
+      })
+      .join('');
+  }
+
+  async function toggleProgressRow(path, liEl) {
+    const detail = liEl.querySelector('.workout-progress-inline-detail');
+    const btn = liEl.querySelector('.workout-progress-item');
+    if (!detail || !btn) return;
+
+    const isOpen = state.progressSelectedPath === path && detail.classList.contains('is-open');
+    if (isOpen) {
+      state.progressSelectedPath = null;
+      detail.classList.remove('is-open');
+      detail.style.display = 'none';
+      detail.innerHTML = '';
+      btn.classList.remove('is-selected');
+      btn.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    document.querySelectorAll('.workout-progress-inline-detail.is-open').forEach((el) => {
+      el.classList.remove('is-open');
+      el.style.display = 'none';
+      el.innerHTML = '';
+    });
+    document.querySelectorAll('.workout-progress-item').forEach((b) => {
+      b.classList.remove('is-selected');
+      b.setAttribute('aria-expanded', 'false');
+    });
+
+    state.progressSelectedPath = path;
+    btn.classList.add('is-selected');
+    btn.setAttribute('aria-expanded', 'true');
+
+    const ws = window.workoutStore;
+    const session = await ws.loadSessionByPath(path);
+    detail.innerHTML = buildProgressDetailInnerHtml(session);
+    detail.classList.add('is-open');
+    detail.style.display = 'block';
+  }
+
   /* ---- View progress ---- */
   async function openProgressModal() {
     const ws = window.workoutStore;
     const rawPaths = await ws.getRecentSessionPaths(120);
     const list = $('view-progress-list');
-    const detail = $('view-progress-detail');
     state.progressSelectedPath = null;
-    if (detail) detail.style.display = 'none';
     if (!list) return;
     const withWork = [];
     for (const p of rawPaths) {
@@ -921,59 +1045,24 @@
       list.innerHTML = paths
         .map(
           (p) =>
-            `<li class="workout-progress-li"><button type="button" class="workout-progress-item" data-session-path="${escapeHtml(p)}">${escapeHtml(formatProgressListLabel(p))}</button></li>`
+            `<li class="workout-progress-li" data-session-path="${escapeHtml(p)}"><button type="button" class="workout-progress-item" data-session-path="${escapeHtml(p)}" aria-expanded="false">${escapeHtml(formatProgressListLabel(p))}</button><div class="workout-progress-inline-detail" style="display:none" aria-live="polite"></div></li>`
         )
         .join('');
     }
     openModal($('view-progress-modal'));
   }
 
-  async function showProgressSessionDetail(path) {
-    state.progressSelectedPath = path;
-    const detail = $('view-progress-detail');
-    const titleEl = $('view-progress-detail-title');
-    const body = $('view-progress-detail-body');
-    if (!detail || !titleEl || !body) return;
-    const ws = window.workoutStore;
-    const session = await ws.loadSessionByPath(path);
-    titleEl.textContent = formatProgressListLabel(path);
-    if (!session || !Array.isArray(session.exercises) || !session.exercises.length) {
-      body.innerHTML = '<p class="workout-progress-detail-empty">No exercises recorded for this day.</p>';
-    } else {
-      const withSets = session.exercises.filter((ex) => Array.isArray(ex.sets) && ex.sets.length > 0);
-      if (!withSets.length) {
-        body.innerHTML =
-          '<p class="workout-progress-detail-empty">No sets logged for this day.</p>';
-      } else {
-        body.innerHTML = withSets
-          .map((ex) => {
-            const sets = ex.sets || [];
-            const name = ex.name || 'Exercise';
-            const stub = { name };
-            const lines = sets
-              .map((s, i) => `<li>${escapeHtml(formatSetLine(stub, s, i + 1))}</li>`)
-              .join('');
-            return `<div class="workout-progress-ex"><strong>${escapeHtml(name)}</strong><ul class="workout-progress-ex-sets">${lines}</ul></div>`;
-          })
-          .join('');
-      }
-    }
-    detail.style.display = 'block';
-  }
-
   function onProgressListClick(e) {
     const btn = e.target.closest('.workout-progress-item[data-session-path]');
     if (!btn) return;
     const path = btn.getAttribute('data-session-path');
-    document.querySelectorAll('.workout-progress-item.is-selected').forEach((b) => b.classList.remove('is-selected'));
-    btn.classList.add('is-selected');
-    showProgressSessionDetail(path);
+    const li = btn.closest('.workout-progress-li');
+    if (!li) return;
+    void toggleProgressRow(path, li);
   }
 
   function closeProgressModal() {
     state.progressSelectedPath = null;
-    const detail = $('view-progress-detail');
-    if (detail) detail.style.display = 'none';
     closeModal($('view-progress-modal'));
   }
 
@@ -1064,7 +1153,11 @@
   function initWorkoutTrackerPage() {
     bindNavToggle();
 
-    $('log-workout-btn') && $('log-workout-btn').addEventListener('click', openLogWorkoutModal);
+    $('log-workout-btn') && $('log-workout-btn').addEventListener('click', () => void openLogWorkoutModal());
+    $('log-workout-date') &&
+      $('log-workout-date').addEventListener('change', () => {
+        applySuggestedDayPlanForIso($('log-workout-date').value);
+      });
     $('log-workout-modal-close') &&
       $('log-workout-modal-close').addEventListener('click', closeLogWorkoutModal);
     $('log-workout-cancel') && $('log-workout-cancel').addEventListener('click', closeLogWorkoutModal);
@@ -1236,6 +1329,14 @@
 
     const editList = $('edit-workout-list');
     editList && editList.addEventListener('click', onEditListClick);
+
+    $('edit-workout-weekday-row') &&
+      $('edit-workout-weekday-row').addEventListener('click', (e) => {
+        const b = e.target.closest('.edit-wd-btn');
+        if (!b) return;
+        b.classList.toggle('is-on');
+        b.setAttribute('aria-pressed', b.classList.contains('is-on') ? 'true' : 'false');
+      });
 
     $('view-progress-btn') &&
       $('view-progress-btn').addEventListener('click', () => openProgressModal());

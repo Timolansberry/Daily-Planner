@@ -402,7 +402,12 @@ window.workoutStore = {
   },
 
   normalizeTemplates(raw) {
-    const out = { A: [], B: [], C: [] };
+    const out = {
+      A: [],
+      B: [],
+      C: [],
+      weekdayByPlan: { A: [], B: [], C: [] }
+    };
     if (!raw || typeof raw !== 'object') return out;
     ['A', 'B', 'C'].forEach((k) => {
       const arr = Array.isArray(raw[k]) ? raw[k] : [];
@@ -422,6 +427,19 @@ window.workoutStore = {
         })
         .filter(Boolean);
     });
+    const wbp = raw.weekdayByPlan;
+    if (wbp && typeof wbp === 'object') {
+      ['A', 'B', 'C'].forEach((k) => {
+        const arr = Array.isArray(wbp[k]) ? wbp[k] : [];
+        out.weekdayByPlan[k] = [
+          ...new Set(
+            arr
+              .map((n) => parseInt(n, 10))
+              .filter((n) => !Number.isNaN(n) && n >= 0 && n <= 6)
+          )
+        ].sort((a, b) => a - b);
+      });
+    }
     return out;
   },
 
