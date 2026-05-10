@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Workout Tracker</title>
   
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300b3ff'%3E%3Ctext x='12' y='18' text-anchor='middle' font-family='Arial, sans-serif' font-size='20' font-weight='bold' fill='%2300b3ff'%3E$%3C/text%3E%3C/svg%3E">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300b3ff'%3E%3Ctext x='12' y='18' text-anchor='middle' font-family='Arial, sans-serif' font-size='20' font-weight='bold' fill='%2300b3ff'%3E$%3C/text%3E%3C/svg%3E">
+  <!-- Favicon (dumbbell) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300b3ff'%3E%3Crect x='2' y='7' width='5' height='10' rx='1.5'/%3E%3Crect x='17' y='7' width='5' height='10' rx='1.5'/%3E%3Crect x='6' y='10' width='12' height='4' rx='1'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300b3ff'%3E%3Crect x='2' y='7' width='5' height='10' rx='1.5'/%3E%3Crect x='17' y='7' width='5' height='10' rx='1.5'/%3E%3Crect x='6' y='10' width='12' height='4' rx='1'/%3E%3C/svg%3E">
   
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,7 +26,7 @@
       <div id="user-info-menu" class="user-info-menu" style="display: none;">
           <div class="user-info-menu-header">
               <h3>Account Information</h3>
-              <button type="button" id="user-info-close-btn" class="user-info-close-btn" aria-label="Close user info">×</button>
+              <button type="button" id="user-info-close-btn" class="user-info-close-btn" aria-label="Close user info">?</button>
           </div>
           <div class="user-info-menu-content">
               <div class="info-row">
@@ -61,7 +61,7 @@
                 <a href="workout-tracker.html" class="active">Workout Tracker</a>
       <div class="nav-controls">
         <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
-          <span class="theme-icon">🌙</span>
+          <span class="theme-icon">??</span>
           <span class="theme-text">Dark Mode</span>
         </button>
         <div class="auth-section">
@@ -119,7 +119,7 @@
     <div class="log-workout-modal-panel">
       <div class="log-workout-modal-header">
         <h2 id="log-workout-modal-title" class="log-workout-modal-title">Log workout</h2>
-        <button type="button" class="log-workout-modal-close" id="log-workout-modal-close" aria-label="Close">×</button>
+        <button type="button" class="log-workout-modal-close" id="log-workout-modal-close" aria-label="Close">?</button>
       </div>
       <div class="log-workout-modal-body">
         <div class="log-workout-field">
@@ -150,48 +150,69 @@
     <div class="workout-session-backdrop" id="workout-session-backdrop"></div>
     <div class="workout-session-panel">
       <div class="workout-session-header">
-        <button type="button" class="workout-session-back-btn" id="workout-session-close" aria-label="Close session">← Back</button>
-        <h2 id="workout-session-title" class="workout-session-title">Log workout</h2>
-        <p id="workout-session-progress" class="workout-session-progress"></p>
+        <button type="button" class="workout-session-back-btn" id="workout-session-close" aria-label="Close session">? Back</button>
+        <div class="workout-session-header-text">
+          <h2 id="workout-session-title" class="workout-session-title">Log workout</h2>
+          <p id="workout-session-progress" class="workout-session-progress"></p>
+          <button type="button" class="workout-change-date-btn" id="workout-change-date-btn">Wrong date?</button>
+          <div id="workout-change-date-panel" class="workout-change-date-panel" style="display: none;" role="group" aria-label="Correct workout date">
+            <label for="workout-change-date-input" class="workout-change-date-label">Move this session to</label>
+            <div class="workout-change-date-row">
+              <input type="date" id="workout-change-date-input" class="workout-change-date-input" autocomplete="off">
+              <button type="button" class="workout-change-date-apply" id="workout-change-date-apply">Apply</button>
+              <button type="button" class="workout-change-date-cancel" id="workout-change-date-cancel">Cancel</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="workout-session-body">
         <h3 id="workout-current-name" class="workout-current-name"></h3>
         <p id="workout-session-hint" class="workout-session-hint" role="status"></p>
         <ul id="workout-sets-today" class="workout-sets-today" aria-label="Sets logged today"></ul>
         <p id="workout-set-edit-banner" class="workout-set-edit-banner" style="display: none;" role="status"></p>
-        <div id="workout-log-controls" class="workout-log-controls">
-          <button type="button" class="workout-history-btn" id="workout-history-btn">History</button>
-          <div id="workout-strength-fields" class="workout-log-fields-inline">
-            <label class="sr-only" for="workout-weight-input">Weight kg</label>
-            <input type="number" class="workout-weight-input" id="workout-weight-input" inputmode="decimal" step="0.25" min="0" placeholder="kg">
-            <label class="sr-only" for="workout-reps-input">Reps this set</label>
-            <input type="number" class="workout-reps-input" id="workout-reps-input" inputmode="numeric" step="1" min="0" placeholder="Reps">
-          </div>
-          <div id="workout-cardio-fields" class="workout-log-fields-inline workout-cardio-fields" style="display: none;">
-            <label class="sr-only" for="workout-cardio-minutes">Minutes</label>
-            <input type="number" class="workout-cardio-minutes-input" id="workout-cardio-minutes" inputmode="decimal" step="1" min="0" placeholder="Min">
-            <label class="sr-only" for="workout-cardio-activity">Activity type</label>
-            <select id="workout-cardio-activity" class="workout-cardio-activity-select" aria-label="Activity type">
-              <option value="">Choose activity</option>
-              <option value="Walk">Walk</option>
-              <option value="Inclined walk">Inclined walk</option>
-              <option value="Boxing">Boxing</option>
-              <option value="Boxing">Boxing warm-up</option>
-              <option value="__other__">Other</option>
-            </select>
-            <label class="sr-only" for="workout-cardio-other">Custom activity name</label>
-            <input type="text" class="workout-cardio-other-input" id="workout-cardio-other" placeholder="Activity name" autocomplete="off" style="display: none;">
-          </div>
-          <button type="button" class="workout-save-set-btn" id="workout-save-set-btn">Save set</button>
+        <div id="workout-log-controls" class="workout-log-controls workout-log-controls-stack">
+          <form id="workout-set-form" class="workout-set-form" action="javascript:void(0)">
+            <div id="workout-strength-fields" class="workout-log-fields-inline workout-strength-input-row workout-strength-one-row">
+              <label class="sr-only" for="workout-weight-input">Weight kg</label>
+              <input type="number" class="workout-weight-input" id="workout-weight-input" inputmode="decimal" step="0.25" min="0" placeholder="kg">
+              <label class="sr-only" for="workout-reps-input">Reps this set</label>
+              <input type="number" class="workout-reps-input" id="workout-reps-input" inputmode="numeric" step="1" min="0" placeholder="Reps" enterkeyhint="done">
+              <button type="submit" class="workout-save-set-btn workout-save-set-strength" id="workout-save-set-btn">Save set</button>
+            </div>
+            <div id="workout-cardio-fields" class="workout-log-fields-inline workout-cardio-fields" style="display: none;">
+              <label class="sr-only" for="workout-cardio-minutes">Minutes</label>
+              <input type="number" class="workout-cardio-minutes-input" id="workout-cardio-minutes" inputmode="decimal" step="1" min="0" placeholder="Min">
+              <label class="sr-only" for="workout-cardio-activity">Activity type</label>
+              <select id="workout-cardio-activity" class="workout-cardio-activity-select" aria-label="Activity type">
+                <option value="">Choose activity</option>
+                <option value="Walk">Walk</option>
+                <option value="Inclined walk">Inclined walk</option>
+                <option value="Boxing">Boxing</option>
+                <option value="Boxing">Boxing warm-up</option>
+                <option value="__other__">Other</option>
+              </select>
+              <label class="sr-only" for="workout-cardio-other">Custom activity name</label>
+              <input type="text" class="workout-cardio-other-input" id="workout-cardio-other" placeholder="Activity name" autocomplete="off" style="display: none;">
+              <button type="button" class="workout-save-set-btn workout-save-set-cardio" id="workout-save-set-cardio-btn">Save set</button>
+            </div>
+          </form>
           <button type="button" class="workout-cancel-edit-set-btn" id="workout-cancel-edit-set-btn" style="display: none;">Cancel edit</button>
-          <button type="button" class="workout-next-exercise-btn" id="workout-next-exercise-btn" aria-label="Finish this exercise and go to next">Next exercise</button>
+          <div class="workout-exercise-nav-btns">
+            <button type="button" class="workout-prev-exercise-btn" id="workout-prev-exercise-btn" aria-label="Go to previous exercise">Previous exercise</button>
+            <button type="button" class="workout-next-exercise-btn" id="workout-next-exercise-btn" aria-label="Finish this exercise and go to next">Next exercise</button>
+          </div>
         </div>
-        <div id="workout-history-panel" class="workout-history-panel" style="display: none;" role="region" aria-label="Exercise history">
+        <div id="workout-history-panel" class="workout-history-panel" role="region" aria-label="Exercise history">
           <div class="workout-history-header">
             <span>Previous sessions</span>
-            <button type="button" id="workout-history-close" class="workout-history-close">Close</button>
+            <div class="workout-history-header-actions">
+              <button type="button" id="workout-history-more" class="workout-history-more" style="display: none;">More</button>
+              <button type="button" id="workout-history-close" class="workout-history-close">Close</button>
+            </div>
           </div>
-          <div id="workout-history-content" class="workout-history-content"></div>
+          <div id="workout-history-body" class="workout-history-body">
+            <div id="workout-history-content" class="workout-history-content"></div>
+          </div>
         </div>
         <div id="workout-oneoff-row" class="workout-oneoff-row">
           <label class="workout-oneoff-label" for="workout-oneoff-name">Add another exercise (this day only)</label>
@@ -213,7 +234,7 @@
     <div class="edit-workout-day-panel">
       <div class="edit-workout-day-header">
         <h2 id="edit-workout-day-title" class="edit-workout-day-title">Edit workout day</h2>
-        <button type="button" class="edit-workout-day-close" id="edit-workout-day-close" aria-label="Close">×</button>
+        <button type="button" class="edit-workout-day-close" id="edit-workout-day-close" aria-label="Close">?</button>
       </div>
       <div class="edit-workout-day-tabs">
         <button type="button" class="edit-workout-tab" data-edit-day="A">Day A</button>
@@ -237,7 +258,7 @@
     <div class="view-progress-panel">
       <div class="view-progress-header">
         <h2 id="view-progress-title" class="view-progress-title">Recent sessions</h2>
-        <button type="button" id="view-progress-close" class="log-workout-modal-close" aria-label="Close">×</button>
+        <button type="button" id="view-progress-close" class="log-workout-modal-close" aria-label="Close">?</button>
       </div>
       <div class="view-progress-body">
         <ul id="view-progress-list" class="view-progress-list" aria-label="Session dates"></ul>
@@ -335,9 +356,9 @@
       try {
         const configModule = await import('./firebase-config.js');
         firebaseConfig = configModule.firebaseConfig;
-        console.log('✅ Loaded Firebase config from file');
+        console.log('? Loaded Firebase config from file');
       } catch (error) {
-        console.warn('⚠︝ No Firebase config file found, using localStorage only');
+        console.warn('?? No Firebase config file found, using localStorage only');
         return;
       }
 

@@ -31,7 +31,10 @@
     editRows: [],
     templatesCache: { A: [], B: [], C: [] },
     editingSetIndex: null,
-    progressSelectedPath: null
+    progressSelectedPath: null,
+    historyShowAll: false,
+    historyCollapsed: false,
+    historyListForPanel: null
   };
 
   const CARDIO_PRESETS = ['Walk', 'Inclined walk', 'Boxing'];
@@ -47,7 +50,15 @@
         cardioActivity: s.cardioActivity != null ? String(s.cardioActivity) : ''
       };
     }
-    return { weightKg: s.weightKg, reps: s.reps };
+    let w = s.weightKg;
+    if (w === '' || w == null) w = null;
+    else {
+      const n = Number(w);
+      if (Number.isNaN(n)) w = null;
+      else if (n === 0) w = null;
+      else w = n;
+    }
+    return { weightKg: w, reps: s.reps };
   }
 
   function $(id) {
@@ -126,34 +137,30 @@
     state.templatesCache = templates;
     const list = templates[dayPlan] || [];
     const existing = await ws.getSession(isoDate);
-    const byId = {};
-    (existing && existing.exercises ? existing.exercises : []).forEach((ex) => {
-      if (ex.templateId) byId[ex.templateId] = ex;
-    });
+    const existingRows = existing && existing.exercises ? existing.exercises : [];
 
-    const exercises = list.map((t) => {
-      const prev = byId[t.id];
-      const exStub = { name: t.name };
+    const templateIdsInSession = new Set();
+    const exercises = existingRows.map((ex) => {
+      if (ex.templateId) templateIdsInSession.add(ex.templateId);
+      const stub = { name: ex.name };
       return {
-        templateId: t.id,
-        oneOff: false,
-        name: t.name,
-        sets: Array.isArray(prev && prev.sets) ? prev.sets.map((s) => mapSetFromStored(s, exStub)) : []
+        templateId: ex.templateId || null,
+        oneOff: !!ex.oneOff,
+        name: ex.name || 'Exercise',
+        sets: Array.isArray(ex.sets) ? ex.sets.map((s) => mapSetFromStored(s, stub)) : []
       };
     });
 
-    (existing && existing.exercises ? existing.exercises : []).forEach((ex) => {
-      if (ex.oneOff) {
-        const one = {
-          templateId: null,
-          oneOff: true,
-          name: ex.name || 'Exercise',
-          sets: []
-        };
-        one.sets = Array.isArray(ex.sets) ? ex.sets.map((s) => mapSetFromStored(s, one)) : [];
-        exercises.push(one);
-      }
-    });
+    for (const t of list) {
+      if (templateIdsInSession.has(t.id)) continue;
+      templateIdsInSession.add(t.id);
+      exercises.push({
+        templateId: t.id,
+        oneOff: false,
+        name: t.name,
+        sets: []
+      });
+    }
 
     state.session = {
       isoDate,
@@ -167,15 +174,23 @@
     return state.session.exercises[state.session.currentIndex];
   }
 
-  function getLastLoggedWeightKg(ex, excludeIndex) {
+  function strengthSetCarryoverState(s) {
+    if (!s) return null;
+    const w = s.weightKg;
+    if (w === '' || w == null) return { kind: 'bw' };
+    const n = Number(w);
+    if (Number.isNaN(n)) return null;
+    if (n === 0) return { kind: 'bw' };
+    return { kind: 'kg', val: n };
+  }
+
+  function getLastStrengthCarryover(ex, excludeIndex) {
     if (isCardioExercise(ex)) return null;
     const sets = ex && ex.sets ? ex.sets : [];
     for (let i = sets.length - 1; i >= 0; i--) {
       if (excludeIndex != null && i === excludeIndex) continue;
-      const wg = sets[i].weightKg;
-      if (wg != null && wg !== '' && !Number.isNaN(Number(wg))) {
-        return Number(wg);
-      }
+      const st = strengthSetCarryoverState(sets[i]);
+      if (st) return st;
     }
     return null;
   }
@@ -199,9 +214,11 @@
       const act = s.cardioActivity && String(s.cardioActivity).trim() ? String(s.cardioActivity).trim() : '—';
       return `Set ${setNum}: ${m} min · ${act}`;
     }
-    const w = s.weightKg != null ? s.weightKg : '—';
+    const w = s.weightKg;
+    const wLabel =
+      w == null || w === '' || Number(w) === 0 ? 'Bodyweight' : `${w} kg`;
     const r = s.reps != null ? s.reps : '—';
-    return `Set ${setNum}: ${w} kg × ${r} reps`;
+    return `Set ${setNum}: ${wLabel} × ${r} reps`;
   }
 
   function weekdayLabelFromPath(path) {
@@ -263,13 +280,13 @@
   }
 
   function updateSaveNextButtons(ex) {
-    const saveBtn = $('workout-save-set-btn');
     const nextBtn = $('workout-next-exercise-btn');
+    const prevBtn = $('workout-prev-exercise-btn');
     const cancelEdit = $('workout-cancel-edit-set-btn');
     const banner = $('workout-set-edit-banner');
-    if (saveBtn) {
-      saveBtn.textContent = state.editingSetIndex != null ? 'Update set' : 'Save set';
-    }
+    document.querySelectorAll('.workout-save-set-btn').forEach((btn) => {
+      btn.textContent = state.editingSetIndex != null ? 'Update set' : 'Save set';
+    });
     if (cancelEdit) {
       cancelEdit.style.display = state.editingSetIndex != null ? '' : 'none';
     }
@@ -288,6 +305,10 @@
     if (nextBtn) {
       nextBtn.textContent = isLast ? 'Done' : 'Next exercise';
       nextBtn.setAttribute('aria-label', isLast ? 'Finish and close workout log' : 'Finish this exercise and go to next');
+    }
+    if (prevBtn) {
+      prevBtn.disabled = idx <= 0;
+      prevBtn.style.opacity = idx <= 0 ? '0.45' : '';
     }
   }
 
@@ -324,6 +345,7 @@
     updateSaveNextButtons(ex);
 
     renderWorkoutOutline();
+    void refreshExerciseHistoryPanel();
   }
 
   function renderWorkoutOutline() {
@@ -420,7 +442,11 @@
     } else {
       const wi = $('workout-weight-input');
       const ri = $('workout-reps-input');
-      if (wi) wi.value = s.weightKg != null ? String(s.weightKg) : '';
+      const wv = s.weightKg;
+      if (wi) {
+        wi.value =
+          wv != null && wv !== '' && Number(wv) !== 0 && !Number.isNaN(Number(wv)) ? String(wv) : '';
+      }
       if (ri) ri.value = s.reps != null ? String(s.reps) : '';
       const minInp = $('workout-cardio-minutes');
       if (minInp) minInp.value = '';
@@ -466,14 +492,63 @@
     state.editingSetIndex = null;
     openModal($('workout-session-overlay'));
     clearWorkoutInputs();
-    $('workout-history-panel').style.display = 'none';
+    state.historyCollapsed = false;
+    state.historyShowAll = false;
+    closeChangeDatePanel();
     renderSessionUI();
-    await persistSession();
   }
 
   function closeSessionOverlay() {
     closeModal($('workout-session-overlay'));
     persistSession();
+  }
+
+  function closeChangeDatePanel() {
+    const p = $('workout-change-date-panel');
+    const b = $('workout-change-date-btn');
+    if (p) p.style.display = 'none';
+    if (b) b.setAttribute('aria-expanded', 'false');
+  }
+
+  function openChangeDatePanel() {
+    const p = $('workout-change-date-panel');
+    const b = $('workout-change-date-btn');
+    const inp = $('workout-change-date-input');
+    if (inp && state.session.isoDate) inp.value = state.session.isoDate;
+    if (p) p.style.display = '';
+    if (b) b.setAttribute('aria-expanded', 'true');
+    if (inp) setTimeout(() => inp.focus(), 0);
+  }
+
+  async function applyWorkoutSessionDateChange() {
+    const input = $('workout-change-date-input');
+    const newIso = input && input.value;
+    if (!newIso) {
+      alert('Choose a date.');
+      return;
+    }
+    const oldIso = state.session.isoDate;
+    if (!oldIso || newIso === oldIso) {
+      closeChangeDatePanel();
+      return;
+    }
+    const ws = window.workoutStore;
+    if (!ws) return;
+    const target = await ws.getSession(newIso);
+    if (target && ws.sessionRecordHasWork(target)) {
+      alert('That date already has a logged workout. Choose a different date.');
+      return;
+    }
+    const payload = buildSessionPayload();
+    if (!ws._sessionPayloadHasWork(payload)) {
+      alert('Log at least one set with reps before moving the session to another date.');
+      return;
+    }
+    await ws.saveSession(newIso, payload);
+    await ws.deleteSession(oldIso);
+    state.session.isoDate = newIso;
+    closeChangeDatePanel();
+    renderSessionUI();
   }
 
   async function onSaveSet() {
@@ -551,17 +626,25 @@
       return;
     }
 
-    let weightVal = wStr !== '' ? parseFloat(wStr) : NaN;
-    let usedPreviousWeight = false;
+    const rawW = wStr !== '' ? parseFloat(wStr) : NaN;
+    const hasPositiveWeight = !Number.isNaN(rawW) && rawW > 0;
+    let weightVal;
+    let usedCarryover = false;
+    let carryoverBw = false;
 
-    if (Number.isNaN(weightVal) || weightVal < 0) {
-      const prevW = getLastLoggedWeightKg(ex, excl);
-      if (prevW != null && !Number.isNaN(prevW)) {
-        weightVal = prevW;
-        usedPreviousWeight = true;
+    if (hasPositiveWeight) {
+      weightVal = rawW;
+    } else {
+      const prev = getLastStrengthCarryover(ex, excl);
+      if (prev == null) {
+        weightVal = null;
+      } else if (prev.kind === 'bw') {
+        weightVal = null;
+        usedCarryover = true;
+        carryoverBw = true;
       } else {
-        alert('Enter weight (kg) for the first set. After that, you can leave weight blank to reuse the last weight.');
-        return;
+        weightVal = prev.val;
+        usedCarryover = true;
       }
     }
 
@@ -576,12 +659,14 @@
 
     clearWorkoutInputs();
 
-    if (usedPreviousWeight) {
+    if (usedCarryover) {
       const hint = $('workout-session-hint');
       if (hint) {
-        hint.textContent = `Saved using ${weightVal} kg from your previous set.`;
+        hint.textContent = carryoverBw
+          ? 'Saved as bodyweight (matching your previous set).'
+          : `Saved using ${weightVal} kg from your previous set.`;
         setTimeout(() => {
-          if (hint && hint.textContent.indexOf('Saved using') === 0) hint.textContent = '';
+          if (hint && hint.textContent.indexOf('Saved') === 0) hint.textContent = '';
         }, 2800);
       }
     }
@@ -596,7 +681,6 @@
       state.session.currentIndex++;
       state.editingSetIndex = null;
       clearWorkoutInputs();
-      $('workout-history-panel').style.display = 'none';
       renderSessionUI();
       await persistSession();
     } else {
@@ -604,6 +688,15 @@
       clearWorkoutInputs();
       closeSessionOverlay();
     }
+  }
+
+  async function onPrevExercise() {
+    if (state.session.currentIndex <= 0) return;
+    state.session.currentIndex--;
+    state.editingSetIndex = null;
+    clearWorkoutInputs();
+    renderSessionUI();
+    await persistSession();
   }
 
   async function onAddOneOff() {
@@ -623,35 +716,87 @@
     state.editingSetIndex = null;
     if (inp) inp.value = '';
     clearWorkoutInputs();
-    $('workout-history-panel').style.display = 'none';
     renderSessionUI();
     await persistSession();
   }
 
-  async function showHistory() {
-    const ex = currentExercise();
-    const panel = $('workout-history-panel');
+  function renderHistoryPanelBody() {
+    const body = $('workout-history-body');
     const content = $('workout-history-content');
-    if (!ex || !panel || !content) return;
-    const ws = window.workoutStore;
-    const { path } = ws.splitDatePath(state.session.isoDate);
-    const hist = await ws.getExerciseHistory(ex.templateId, ex.name, path, 15);
+    const moreBtn = $('workout-history-more');
+    const hist = state.historyListForPanel || [];
+    if (!content || !body || !moreBtn) return;
+
+    const limit = !hist.length
+      ? 0
+      : state.historyShowAll
+        ? hist.length
+        : Math.min(3, hist.length);
+
     if (!hist.length) {
-      content.innerHTML = '<p class="workout-history-empty">No previous logs for this exercise.</p>';
+      content.innerHTML =
+        '<p class="workout-history-empty">No previous logs for this exercise.</p>';
     } else {
-      content.innerHTML = hist
-        .map(
-          (h) =>
-            `<div class="workout-history-line"><span class="workout-history-date">${escapeHtml(h.datePath)}</span> <span class="workout-history-w">${escapeHtml(String(h.weightKg))} kg</span> <span class="workout-history-r">${escapeHtml(h.repsDisplay)}</span></div>`
-        )
+      const rows = hist.slice(0, limit);
+      content.innerHTML = rows
+        .map((h) => {
+          const wStr = String(h.weightKg);
+          const wCol = /\bmin\b/i.test(wStr) || wStr === 'Bodyweight' ? wStr : `${wStr} kg`;
+          return `<div class="workout-history-line"><span class="workout-history-date">${escapeHtml(h.datePath)}</span> <span class="workout-history-w">${escapeHtml(wCol)}</span> <span class="workout-history-r">${escapeHtml(h.repsDisplay)}</span></div>`;
+        })
         .join('');
     }
-    panel.style.display = 'block';
+
+    if (state.historyCollapsed) {
+      body.style.display = 'none';
+      body.setAttribute('aria-hidden', 'true');
+      moreBtn.style.display = hist.length > 0 ? '' : 'none';
+      moreBtn.textContent = 'More';
+      return;
+    }
+
+    body.style.display = '';
+    body.removeAttribute('aria-hidden');
+
+    if (!hist.length) {
+      moreBtn.style.display = 'none';
+      return;
+    }
+
+    if (state.historyShowAll) {
+      moreBtn.style.display = '';
+      moreBtn.textContent = 'Less';
+    } else if (hist.length > 3) {
+      moreBtn.style.display = '';
+      moreBtn.textContent = 'More';
+    } else {
+      moreBtn.style.display = 'none';
+    }
+  }
+
+  async function refreshExerciseHistoryPanel() {
+    const ex = currentExercise();
+    if (!ex) {
+      state.historyListForPanel = [];
+      renderHistoryPanelBody();
+      return;
+    }
+    const ws = window.workoutStore;
+    if (!ws) {
+      state.historyListForPanel = [];
+      renderHistoryPanelBody();
+      return;
+    }
+    const { path } = ws.splitDatePath(state.session.isoDate);
+    const hist = await ws.getExerciseHistory(ex.templateId, ex.name, path, 80);
+    state.historyListForPanel = hist;
+    renderHistoryPanelBody();
   }
 
   function closeHistory() {
-    const panel = $('workout-history-panel');
-    if (panel) panel.style.display = 'none';
+    state.historyCollapsed = true;
+    state.historyShowAll = false;
+    renderHistoryPanelBody();
   }
 
   /* ---- Edit workout days A/B/C ---- */
@@ -745,15 +890,31 @@
     renderEditList();
   }
 
+  function pathToSortTime(path) {
+    const parts = (path || '').split('/');
+    const y = parseInt(parts[0], 10);
+    const mo = parseInt(parts[1], 10);
+    const da = parseInt(parts[2], 10);
+    if (Number.isNaN(y) || Number.isNaN(mo) || Number.isNaN(da)) return 0;
+    return new Date(y, mo - 1, da).getTime();
+  }
+
   /* ---- View progress ---- */
   async function openProgressModal() {
     const ws = window.workoutStore;
-    const paths = await ws.getRecentSessionPaths(25);
+    const rawPaths = await ws.getRecentSessionPaths(120);
     const list = $('view-progress-list');
     const detail = $('view-progress-detail');
     state.progressSelectedPath = null;
     if (detail) detail.style.display = 'none';
     if (!list) return;
+    const withWork = [];
+    for (const p of rawPaths) {
+      const sess = await ws.loadSessionByPath(p);
+      if (ws.sessionRecordHasWork(sess)) withWork.push(p);
+    }
+    withWork.sort((a, b) => pathToSortTime(b) - pathToSortTime(a));
+    const paths = withWork.slice(0, 25);
     if (!paths.length) {
       list.innerHTML = '<li class="workout-progress-empty">No logged sessions yet.</li>';
     } else {
@@ -926,11 +1087,31 @@
     $('workout-session-backdrop') &&
       $('workout-session-backdrop').addEventListener('click', () => closeSessionOverlay());
 
-    $('workout-save-set-btn') && $('workout-save-set-btn').addEventListener('click', () => onSaveSet());
+    const setForm = $('workout-set-form');
+    setForm &&
+      setForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        onSaveSet();
+      });
+    $('workout-save-set-cardio-btn') &&
+      $('workout-save-set-cardio-btn').addEventListener('click', () => onSaveSet());
     $('workout-cancel-edit-set-btn') &&
       $('workout-cancel-edit-set-btn').addEventListener('click', () => cancelEditSet());
     $('workout-next-exercise-btn') &&
       $('workout-next-exercise-btn').addEventListener('click', () => onNextExercise());
+    $('workout-prev-exercise-btn') &&
+      $('workout-prev-exercise-btn').addEventListener('click', () => onPrevExercise());
+
+    $('workout-change-date-btn') &&
+      $('workout-change-date-btn').addEventListener('click', () => {
+        const p = $('workout-change-date-panel');
+        if (p && p.style.display !== 'none') closeChangeDatePanel();
+        else openChangeDatePanel();
+      });
+    $('workout-change-date-apply') &&
+      $('workout-change-date-apply').addEventListener('click', () => applyWorkoutSessionDateChange());
+    $('workout-change-date-cancel') &&
+      $('workout-change-date-cancel').addEventListener('click', () => closeChangeDatePanel());
 
     const weightInput = $('workout-weight-input');
     const repsInput = $('workout-reps-input');
@@ -1005,15 +1186,25 @@
         state.session.currentIndex = i;
         state.editingSetIndex = null;
         clearWorkoutInputs();
-        const hp = $('workout-history-panel');
-        if (hp) hp.style.display = 'none';
         renderSessionUI();
         persistSession();
       });
 
     $('view-progress-list') &&
       $('view-progress-list').addEventListener('click', onProgressListClick);
-    $('workout-history-btn') && $('workout-history-btn').addEventListener('click', () => showHistory());
+    $('workout-history-more') &&
+      $('workout-history-more').addEventListener('click', () => {
+        const hist = state.historyListForPanel || [];
+        if (state.historyCollapsed) {
+          state.historyCollapsed = false;
+          state.historyShowAll = false;
+        } else if (state.historyShowAll) {
+          state.historyShowAll = false;
+        } else if (hist.length > 3) {
+          state.historyShowAll = true;
+        }
+        renderHistoryPanelBody();
+      });
     $('workout-history-close') && $('workout-history-close').addEventListener('click', closeHistory);
     $('workout-add-oneoff-btn') &&
       $('workout-add-oneoff-btn').addEventListener('click', () => onAddOneOff());

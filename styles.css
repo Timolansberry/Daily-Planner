@@ -1180,6 +1180,73 @@ body {
   color: var(--muted);
 }
 
+.workout-session-header-text {
+  min-width: 0;
+}
+
+.workout-change-date-btn {
+  margin-top: var(--space-3);
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.workout-change-date-panel {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.workout-change-date-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.workout-change-date-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.workout-change-date-input {
+  min-height: 44px;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.workout-change-date-apply,
+.workout-change-date-cancel {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.workout-change-date-apply {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
 .workout-session-body {
   padding: var(--space-4);
   flex: 1;
@@ -1321,9 +1388,64 @@ body {
   margin-bottom: var(--space-5);
 }
 
-.workout-history-btn,
+.workout-log-controls-stack {
+  flex-direction: column;
+  align-items: stretch;
+  flex-wrap: nowrap;
+}
+
+.workout-set-form {
+  display: block;
+  width: 100%;
+}
+
+.workout-strength-input-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.workout-strength-one-row {
+  flex-wrap: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.workout-strength-one-row .workout-weight-input {
+  width: 4.25rem;
+  flex-shrink: 0;
+}
+
+.workout-strength-one-row .workout-reps-input {
+  flex: 1;
+  min-width: 3rem;
+  width: auto;
+  max-width: none;
+}
+
+.workout-strength-one-row .workout-save-set-btn {
+  flex-shrink: 0;
+}
+
+.workout-exercise-nav-btns {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.workout-exercise-nav-btns .workout-prev-exercise-btn,
+.workout-exercise-nav-btns .workout-next-exercise-btn {
+  flex: 1;
+  min-width: 0;
+}
+
 .workout-save-set-btn,
 .workout-next-exercise-btn,
+.workout-prev-exercise-btn,
 .workout-cancel-edit-set-btn {
   min-height: 44px;
   padding: var(--space-2) var(--space-3);
@@ -1336,9 +1458,9 @@ body {
   color: var(--text);
 }
 
-.workout-history-btn:hover,
 .workout-save-set-btn:hover,
 .workout-next-exercise-btn:hover,
+.workout-prev-exercise-btn:hover,
 .workout-cancel-edit-set-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
@@ -1371,6 +1493,15 @@ body {
   width: 5.5rem;
 }
 
+.workout-prev-exercise-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.workout-cardio-fields {
+  margin-top: var(--space-2);
+}
+
 .workout-history-panel {
   margin-bottom: var(--space-5);
   padding: var(--space-3);
@@ -1386,6 +1517,30 @@ body {
   margin-bottom: var(--space-2);
   font-size: var(--font-size-sm);
   font-weight: 600;
+}
+
+.workout-history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.workout-history-more {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+}
+
+.workout-history-more:hover {
+  text-decoration: underline;
+}
+
+.workout-history-body {
+  margin-top: var(--space-2);
 }
 
 .workout-history-close {

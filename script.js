@@ -479,7 +479,71 @@ window.workoutStore = {
     return raw ? JSON.parse(raw) : null;
   },
 
+  /**
+   * True if the session has at least one strength set with reps &gt; 0 or cardio with minutes &gt; 0.
+   */
+  _sessionPayloadHasWork(sessionData) {
+    if (!sessionData || !Array.isArray(sessionData.exercises)) return false;
+    for (const ex of sessionData.exercises) {
+      const sets = ex.sets || [];
+      const name = (ex.name || '').trim().toLowerCase();
+      const isCardio = name === 'cardio';
+      for (const s of sets) {
+        if (isCardio) {
+          const min = s.minutes != null && s.minutes !== '' ? Number(s.minutes) : NaN;
+          if (!Number.isNaN(min) && min > 0) return true;
+        } else {
+          const reps = s.reps != null && s.reps !== '' ? Number(s.reps) : NaN;
+          if (!Number.isNaN(reps) && reps > 0) return true;
+        }
+      }
+    }
+    return false;
+  },
+
+  sessionRecordHasWork(raw) {
+    if (!raw || typeof raw !== 'object') return false;
+    return this._sessionPayloadHasWork({ dayPlan: raw.dayPlan, exercises: raw.exercises });
+  },
+
+  async deleteSession(isoDate) {
+    const { y, m, d, path } = this.splitDatePath(isoDate);
+    const base = this._base();
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, remove } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        await remove(ref(window.firebase.db, `${base}/${y}/${m}/${d}`));
+      } catch (e) {
+        console.error('workoutStore.deleteSession', e);
+      }
+    }
+    try {
+      localStorage.removeItem(this.sessionLsKey(path));
+    } catch (e) {
+      console.error('workoutStore.deleteSession ls', e);
+    }
+    const list = await this.getRecentSessionPaths(80);
+    const merged = list.filter((p) => p !== path);
+    if (storage._firebaseReady && base && window.firebase && window.firebase.db) {
+      try {
+        const { ref, set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        await set(ref(window.firebase.db, `${base}/_meta/recentSessionPaths`), merged);
+      } catch (e) {
+        console.error('workoutStore.deleteSession meta', e);
+      }
+    }
+    try {
+      localStorage.setItem(this.LS_META, JSON.stringify({ recentSessionPaths: merged }));
+    } catch (e) {
+      console.error('workoutStore.deleteSession meta ls', e);
+    }
+  },
+
   async saveSession(isoDate, sessionData) {
+    if (!this._sessionPayloadHasWork(sessionData)) {
+      await this.deleteSession(isoDate);
+      return;
+    }
     const { y, m, d, path } = this.splitDatePath(isoDate);
     const payload = {
       ...sessionData,
@@ -589,13 +653,24 @@ window.workoutStore = {
           });
         } else {
           const repsDisplay = '(' + sets.map((s) => String(s.reps != null ? s.reps : '—')).join('-') + ')';
-          const weightKg = last.weightKg != null ? last.weightKg : '—';
+          const w = last.weightKg;
+          const weightKg =
+            w != null && w !== '' && Number(w) !== 0 && !Number.isNaN(Number(w)) ? w : 'Bodyweight';
           history.push({ datePath: p, weightKg, repsDisplay });
         }
         break;
       }
-      if (history.length >= cap) break;
+        if (history.length >= cap) break;
     }
+    const pathToTime = (p) => {
+      const parts = (p || '').split('/');
+      const y = parseInt(parts[0], 10);
+      const mo = parseInt(parts[1], 10);
+      const da = parseInt(parts[2], 10);
+      if (Number.isNaN(y) || Number.isNaN(mo) || Number.isNaN(da)) return 0;
+      return new Date(y, mo - 1, da).getTime();
+    };
+    history.sort((a, b) => pathToTime(b.datePath) - pathToTime(a.datePath));
     return history;
   },
 
