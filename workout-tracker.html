@@ -26,7 +26,7 @@
       <div id="user-info-menu" class="user-info-menu" style="display: none;">
           <div class="user-info-menu-header">
               <h3>Account Information</h3>
-              <button type="button" id="user-info-close-btn" class="user-info-close-btn" aria-label="Close user info">?</button>
+              <button type="button" id="user-info-close-btn" class="user-info-close-btn" aria-label="Close user info">&times;</button>
           </div>
           <div class="user-info-menu-content">
               <div class="info-row">
@@ -53,7 +53,7 @@
       <div id="user-info-menu-backdrop" class="user-info-menu-backdrop"></div>
       
       <h1 class="title">WORKOUT TRACKER</h1>
-      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation"></button>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation"><span aria-hidden="true">&#9776;</span></button>
             <nav class="app-nav" aria-label="App navigation">
                 <a href="index.html">Planner</a>
                 <a href="habit-builder.html">Habits</a>
@@ -61,7 +61,7 @@
                 <a href="workout-tracker.html" class="active">Workout Tracker</a>
       <div class="nav-controls">
         <button type="button" id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light mode">
-          <span class="theme-icon">??</span>
+          <span class="theme-icon" aria-hidden="true">&#127769;</span>
           <span class="theme-text">Dark Mode</span>
         </button>
         <div class="auth-section">
@@ -119,7 +119,7 @@
     <div class="log-workout-modal-panel">
       <div class="log-workout-modal-header">
         <h2 id="log-workout-modal-title" class="log-workout-modal-title">Log workout</h2>
-        <button type="button" class="log-workout-modal-close" id="log-workout-modal-close" aria-label="Close">?</button>
+        <button type="button" class="log-workout-modal-close" id="log-workout-modal-close" aria-label="Close">&times;</button>
       </div>
       <div class="log-workout-modal-body">
         <div class="log-workout-field">
@@ -150,7 +150,7 @@
     <div class="workout-session-backdrop" id="workout-session-backdrop"></div>
     <div class="workout-session-panel">
       <div class="workout-session-header">
-        <button type="button" class="workout-session-back-btn" id="workout-session-close" aria-label="Close session">? Back</button>
+        <button type="button" class="workout-session-back-btn" id="workout-session-close" aria-label="Close session"><span aria-hidden="true">&larr;</span> Back</button>
         <div class="workout-session-header-text">
           <h2 id="workout-session-title" class="workout-session-title">Log workout</h2>
           <p id="workout-session-progress" class="workout-session-progress"></p>
@@ -234,7 +234,7 @@
     <div class="edit-workout-day-panel">
       <div class="edit-workout-day-header">
         <h2 id="edit-workout-day-title" class="edit-workout-day-title">Edit workout day</h2>
-        <button type="button" class="edit-workout-day-close" id="edit-workout-day-close" aria-label="Close">?</button>
+        <button type="button" class="edit-workout-day-close" id="edit-workout-day-close" aria-label="Close">&times;</button>
       </div>
       <div class="edit-workout-day-tabs">
         <button type="button" class="edit-workout-tab" data-edit-day="A">Day A</button>
@@ -258,7 +258,7 @@
     <div class="view-progress-panel">
       <div class="view-progress-header">
         <h2 id="view-progress-title" class="view-progress-title">Recent sessions</h2>
-        <button type="button" id="view-progress-close" class="log-workout-modal-close" aria-label="Close">?</button>
+        <button type="button" id="view-progress-close" class="log-workout-modal-close" aria-label="Close">&times;</button>
       </div>
       <div class="view-progress-body">
         <ul id="view-progress-list" class="view-progress-list" aria-label="Session dates"></ul>

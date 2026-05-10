@@ -940,20 +940,23 @@
     if (!session || !Array.isArray(session.exercises) || !session.exercises.length) {
       body.innerHTML = '<p class="workout-progress-detail-empty">No exercises recorded for this day.</p>';
     } else {
-      body.innerHTML = session.exercises
-        .map((ex) => {
-          const sets = ex.sets || [];
-          const name = ex.name || 'Exercise';
-          if (!sets.length) {
-            return `<div class="workout-progress-ex"><strong>${escapeHtml(name)}</strong><p class="workout-progress-no-sets">No sets logged.</p></div>`;
-          }
-          const stub = { name };
-          const lines = sets
-            .map((s, i) => `<li>${escapeHtml(formatSetLine(stub, s, i + 1))}</li>`)
-            .join('');
-          return `<div class="workout-progress-ex"><strong>${escapeHtml(name)}</strong><ul class="workout-progress-ex-sets">${lines}</ul></div>`;
-        })
-        .join('');
+      const withSets = session.exercises.filter((ex) => Array.isArray(ex.sets) && ex.sets.length > 0);
+      if (!withSets.length) {
+        body.innerHTML =
+          '<p class="workout-progress-detail-empty">No sets logged for this day.</p>';
+      } else {
+        body.innerHTML = withSets
+          .map((ex) => {
+            const sets = ex.sets || [];
+            const name = ex.name || 'Exercise';
+            const stub = { name };
+            const lines = sets
+              .map((s, i) => `<li>${escapeHtml(formatSetLine(stub, s, i + 1))}</li>`)
+              .join('');
+            return `<div class="workout-progress-ex"><strong>${escapeHtml(name)}</strong><ul class="workout-progress-ex-sets">${lines}</ul></div>`;
+          })
+          .join('');
+      }
     }
     detail.style.display = 'block';
   }
